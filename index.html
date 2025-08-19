@@ -1,551 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
+<html lang="pt"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<meta name="theme-color" content="#0b0d10"/>
 <link rel="manifest" href="manifest.json">
-<title>PitStop Pro v3 Admin</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<title>PitStop Pro v3</title>
 <style>
-:root{--bg:#0b0d10;--card:#15181c;--text:#e8eaed;--muted:#a1a7b3;--accent:#00c853;--danger:#e53935;--line:#2a3139}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header{position:sticky;top:0;background:#0c0e11;padding:12px;border-bottom:1px solid #1e232a}
-h1{margin:0;font-size:20px}
-.small{color:var(--muted);font-size:12px}
-.tabs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.tab{flex:1;text-align:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:#111317;color:var(--muted);cursor:pointer}
-.tab.active{background:#181b20;color:var(--text)}
-main{padding:12px;max-width:1100px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0e1114;color:var(--text)}
-textarea{min-height:70px;resize:vertical}
+body{margin:0;font-family:sans-serif;background:#0b0d10;color:#eee}
+header{padding:12px;background:#111;border-bottom:1px solid #333;position:sticky;top:0}
+.tabs{display:flex;gap:8px;margin-top:8px}
+.tab{flex:1;text-align:center;padding:10px;background:#222;color:#aaa;border-radius:6px;cursor:pointer}
+.tab.active{background:#333;color:#fff}
+main{padding:12px}
+.card{background:#15181c;border-radius:10px;padding:12px;margin-bottom:12px}
+label{display:block;font-size:12px;margin-bottom:4px;color:#9aa}
+input,textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid #333;background:#0e1114;color:#fff}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-button{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#15181c;color:var(--text);cursor:pointer}
-.primary{background:var(--accent);border-color:#0a9d4b}
-.danger{background:var(--danger);border-color:#b71c1c}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid var(--line);font-size:12px;text-align:left}
-.pill{font-size:11px;padding:3px 8px;border-radius:999px;background:#21262d;border:1px solid var(--line);color:#cfd8dc}
-.center{text-align:center}
-#map{width:100%;height:360px;border-radius:12px;border:1px solid var(--line);margin-top:8px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:900px){.row,.row3,.grid{grid-template-columns:1fr}#map{height:300px}}
-footer{font-size:11px;color:var(--muted);text-align:center;margin:16px 0}
-.version{float:right;color:var(--muted);font-size:11px}
-hr{border:0;border-top:1px solid var(--line);margin:10px 0}
-</style>
-</head>
+button{padding:10px;border-radius:8px;border:1px solid #333;background:#1d2127;color:#fff;cursor:pointer}
+.primary{background:#00c853;border-color:#0a9d4b}
+.danger{background:#e53935;border-color:#b71c1c}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #333;font-size:12px;text-align:left}
+#map{height:300px;border:1px solid #333;border-radius:10px}
+</style></head>
 <body>
 <header>
-  <h1>🚚 PitStop Pro <span class="small">v3-admin</span><span class="version" id="ver"></span></h1>
-  <div class="tabs">
+  <h2>🚚 PitStop Pro v3</h2>
+  <div class="tabs" id="tabs">
     <div class="tab active" data-tab="overview">Overview</div>
     <div class="tab" data-tab="shifts">Shifts</div>
     <div class="tab" data-tab="fuel">Fuel</div>
     <div class="tab" data-tab="maint">Maintenance</div>
     <div class="tab" data-tab="export">Export</div>
-    <div class="tab" data-tab="settings">Settings</div>
   </div>
 </header>
 <main>
-
-<!-- OVERVIEW -->
 <section id="overview" class="view">
-  <div class="card">
-    <div class="row">
-      <div class="card">
-        <div>🚛 Total km</div><h2 id="ov_total_km">—</h2>
-      </div>
-      <div class="card">
-        <div>⏱️ Horas condução</div><h2 id="ov_total_h">—</h2>
-      </div>
-    </div>
-    <div class="row">
-      <div class="card">
-        <div>📅 Turnos</div><h2 id="ov_turnos">—</h2>
-      </div>
-      <div class="card">
-        <div>⚡ Média km/turno</div><h2 id="ov_media">—</h2>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <h3 class="center">Km por semana</h3>
-    <canvas id="bar" height="160"></canvas>
-  </div>
-  <div class="card">
-    <h3 class="center">Rotas mais frequentes</h3>
-    <canvas id="pie" height="180"></canvas>
-  </div>
+  <div class="card"><b>Dashboard</b><p>Total km: 0 | Turnos: 0</p></div>
 </section>
-
-<!-- SHIFTS -->
 <section id="shifts" class="view" style="display:none">
-  <div class="card">
-    <h3>Turno</h3>
+  <div class="card"><b>Turno</b>
     <div class="row3">
-      <div>
-        <label>Cidade/País início</label><input id="s_city_start" placeholder="Rotterdam, NL">
-        <label>Km início</label><input id="s_km_start" type="number" placeholder="314000">
-      </div>
-      <div>
-        <label>Cidade/País fim</label><input id="s_city_end" placeholder="Milan, IT">
-        <label>Km fim</label><input id="s_km_end" type="number" placeholder="314850">
-      </div>
-      <div>
-        <label>Notas</label><textarea id="s_note" placeholder="Trailer alto, vento lateral..."></textarea>
-      </div>
+      <div><label>Cidade/País início</label><input id="s_city_start"><label>Km início</label><input id="s_km_start" type="number"></div>
+      <div><label>Cidade/País fim</label><input id="s_city_end"><label>Km fim</label><input id="s_km_end" type="number"></div>
+      <div><label>Notas</label><textarea id="s_note"></textarea></div>
     </div>
-    <div class="row">
-      <div><label>Trailer swap</label><input id="s_swap" placeholder="Ex: Troca no km 245, trailer ABC-123"></div>
-      <div><label>Status GPS</label><div id="gpsStatus" class="pill">idle</div></div>
-    </div>
-    <div class="row">
-      <div><label>Local de Carga</label><input id="s_load" placeholder="Local"></div>
-      <div><label>Hora de Carga</label><input id="s_load_time" type="datetime-local"></div>
-    </div>
-    <div class="row">
-      <div><label>Local de Descarga</label><input id="s_unload" placeholder="Local"></div>
-      <div><label>Hora de Descarga</label><input id="s_unload_time" type="datetime-local"></div>
-    </div>
-
+    <div class="row"><div><label>Trailer swap</label><input id="s_swap"></div><div><label>Status GPS</label><span id="gpsStatus">idle</span></div></div>
+    <div class="row"><div><label>Local de Carga</label><input id="s_load"></div><div><label>Hora de Carga</label><input id="s_load_time" type="datetime-local"></div></div>
+    <div class="row"><div><label>Local de Descarga</label><input id="s_unload"></div><div><label>Hora de Descarga</label><input id="s_unload_time" type="datetime-local"></div></div>
     <div id="map"></div>
-    <div class="grid" style="margin-top:8px">
-      <div>
-        <div><span class="pill">Points:</span> <span id="gpsPoints">0</span></div>
-        <div><span class="pill">Distance:</span> <span id="gpsDist">0.00 km</span></div>
-      </div>
-      <div>
-        <div><span class="pill">Start:</span> <span id="startInfo">—</span></div>
-        <div><span class="pill">End:</span> <span id="endInfo">—</span></div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-      <button class="primary" id="btnStart">▶️ Start shift (GPS)</button>
-      <button class="danger" id="btnStop" disabled>⏹ Stop shift</button>
-      <button id="btnLoad">📦 Mark Load Now</button>
-      <button id="btnUnload">🏁 Mark Unload Now</button>
-      <button id="btnWaypoint">➕ Add manual waypoint</button>
-      <button id="btnClear">Clear current</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Histórico</h3>
-    <table id="shiftTable"><thead><tr>
-      <th>Start</th><th>End</th><th>Duration</th><th>Distance</th><th>Start City</th><th>End City</th><th>Km Start</th><th>Km End</th><th>Load/Unload</th><th>Swap</th><th>Note</th><th></th>
-    </tr></thead><tbody></tbody></table>
-  </div>
-</section>
-
-<!-- FUEL -->
-<section id="fuel" class="view" style="display:none">
-  <div class="card">
-    <h3>Fuel</h3>
-    <div class="row">
-      <div><label>Date & time</label><input type="datetime-local" id="f_date"></div>
-      <div><label>Odometer (km)</label><input type="number" id="f_odo"></div>
-    </div>
-    <div class="row">
-      <div><label>Liters</label><input type="number" step="0.001" id="f_liters"></div>
-      <div><label>Total Price (€)</label><input type="number" step="0.01" id="f_total"></div>
-    </div>
-    <div class="row">
-      <div><label>Fuel Type</label><select id="f_type"><option>95 E10</option><option>98 E5</option><option>Diesel B7</option></select></div>
-      <div><label>Brand / Station</label><input id="f_brand"></div>
-    </div>
-    <div><label>Notes</label><input id="f_notes"></div>
     <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="primary" id="btnAddFuel">Add Fill-up</button>
-      <button id="btnClearFuel">Clear</button>
+      <button class="primary" id="btnStart">Start shift (GPS)</button>
+      <button class="danger" id="btnStop" disabled>Stop shift</button>
+      <button id="btnLoad">Mark Load Now</button>
+      <button id="btnUnload">Mark Unload Now</button>
+      <button id="btnWaypoint">Add manual waypoint</button>
     </div>
   </div>
   <div class="card">
-    <table id="fuelTable"><thead><tr><th>Date</th><th>Odo</th><th>L</th><th>€</th><th>/L</th><th>Type</th><th>Brand</th><th>Δkm</th><th>L/100</th><th></th></tr></thead><tbody></tbody></table>
+    <b>Histórico</b>
+    <table id="shiftTable"><thead><tr><th>Start</th><th>End</th><th>Dist</th><th>Start City</th><th>End City</th><th></th></tr></thead><tbody></tbody></table>
   </div>
 </section>
-
-<!-- MAINT -->
-<section id="maint" class="view" style="display:none">
-  <div class="card">
-    <h3>Maintenance</h3>
-    <div class="row">
-      <div><label>Task</label><input id="m_task"></div>
-      <div><label>Category</label><select id="m_cat"><option>Engine</option><option>Brakes</option><option>Suspension</option><option>Tyres</option><option>Electrical</option><option>Fluids</option><option>Other</option></select></div>
-    </div>
-    <div class="row">
-      <div><label>Done on</label><input type="date" id="m_date"></div>
-      <div><label>Done at (km)</label><input type="number" id="m_km"></div>
-    </div>
-    <div class="row">
-      <div><label>Next due (date)</label><input type="date" id="m_next_date"></div>
-      <div><label>Next due (km)</label><input type="number" id="m_next_km"></div>
-    </div>
-    <div><label>Notes</label><input id="m_notes"></div>
-    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="primary" id="btnAddMaint">Add Record</button>
-      <button id="btnClearMaint">Clear</button>
-    </div>
-  </div>
-  <div class="card">
-    <table id="maintTable"><thead><tr><th>Task</th><th>Cat</th><th>Done</th><th>@km</th><th>Next</th><th>Due km</th><th>Notes</th><th></th></tr></thead><tbody></tbody></table>
-  </div>
-</section>
-
-<!-- EXPORT -->
-<section id="export" class="view" style="display:none">
-  <div class="card">
-    <button id="expShift">Export Shifts CSV</button>
-    <button id="expFuel">Export Fuel CSV</button>
-    <button id="expMaint">Export Maintenance CSV</button>
-    <button class="primary" id="pdfMonth">PDF Mensal (A5)</button>
-    <button class="primary" id="pdfLast">PDF Último Turno (A5)</button>
-    <button class="danger" id="wipe">Wipe ALL</button>
-  </div>
-</section>
-
-<!-- SETTINGS -->
-<section id="settings" class="view" style="display:none">
-  <div class="card">
-    <h3>Admin Sync (opcional)</h3>
-    <div class="row">
-      <div><label>Device alias</label><input id="st_alias" placeholder="Ex: SkyCruiser-iPhone"></div>
-      <div><label>Auto-sync on save</label><select id="st_autosync"><option value="off">Off</option><option value="on">On</option></select></div>
-    </div>
-    <div class="row">
-      <div><label>Sync URL (webhook / endpoint)</label><input id="st_url" placeholder="https://api.seudominio.com/pitstop/sync"></div>
-      <div><label>API Key (Header: Authorization: Bearer)</label><input id="st_key" placeholder="chave-secreta"></div>
-    </div>
-    <div class="row">
-      <div><label>Encrypt with passphrase (AES‑GCM, opcional)</label><input id="st_pass" type="password" placeholder="frase-secreta"></div>
-      <div><label>Last sync</label><input id="st_last" disabled></div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="primary" id="btnSaveSettings">Save settings</button>
-      <button id="btnTestSync">Test sync</button>
-      <button id="btnSyncNow">Sync now</button>
-    </div>
-    <hr/>
-    <p class="small">Por defeito todos os dados ficam 100% <b>locais</b> (offline-first). O sync é opcional; se usares, podes cifrar o payload no dispositivo antes de enviar.</p>
-  </div>
-</section>
-
-<footer>Local-first • Optional encrypted sync • (c) João 2025</footer>
-
+<section id="fuel" class="view" style="display:none"><div class="card">Fuel (demo)</div></section>
+<section id="maint" class="view" style="display:none"><div class="card">Maintenance (demo)</div></section>
+<section id="export" class="view" style="display:none"><div class="card"><button onclick="exportCSV()">Export CSV</button></div></section>
 </main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ---- PWA ----
-document.getElementById('ver').textContent = 'build: 3-admin';
-if ('serviceWorker' in navigator) { window.addEventListener('load', ()=>navigator.serviceWorker.register('service-worker.js')); }
+// Tabs robustas
+function showTab(id){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelector('.tab[data-tab="'+id+'"]').classList.add('active');document.querySelectorAll('.view').forEach(v=>v.style.display='none');document.getElementById(id).style.display='block';}
+document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
 
-// ---- Tabs ----
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.style.display='none'); document.getElementById(t.dataset.tab).style.display='block';
-});
+// DB
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||'[]'),set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 
-// ---- DB helpers ----
-const DB={get:k=>JSON.parse(localStorage.getItem(k)||'[]'), set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
-const CFG={get:()=>JSON.parse(localStorage.getItem('cfg')||'{}'), set:(c)=>localStorage.setItem('cfg',JSON.stringify(c))};
+// Mapa + GPS
+let map=L.map('map').setView([52.1,5.1],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+let line=L.polyline([],{weight:5}).addTo(map);
+let watchId=null, pts=[], startTime=null;
+function hav(a,b){const R=6371000,rad=x=>x*Math.PI/180;const dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng);const s=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(s**0.5);}
+function dist(){let d=0;for(let i=1;i<pts.length;i++)d+=hav(pts[i-1],pts[i]);return d/1000;}
 
-// ---- Device ID ----
-if(!localStorage.getItem('device_id')){ localStorage.setItem('device_id', crypto.randomUUID()); }
-const DEVICE_ID = localStorage.getItem('device_id');
-
-// ---- Overview (charts from real data; fallback to sim if empty) ----
-function computeOverview(){
-  const shifts=DB.get('shifts');
-  let totalKm=0,totalH=0;
-  shifts.forEach(s=>{ totalKm+=s.distance_km||0; if(s.end_time&&s.start_time){ totalH+=(s.end_time-s.start_time)/3600000; }});
-  const turnos=shifts.length;
-  document.getElementById('ov_total_km').textContent = totalKm.toFixed(0)+' km';
-  document.getElementById('ov_total_h').textContent = totalH.toFixed(1)+' h';
-  document.getElementById('ov_turnos').textContent = turnos;
-  document.getElementById('ov_media').textContent = (turnos? totalKm/turnos:0).toFixed(0)+' km/turno';
-
-  // weekly km + routes
-  let weeks={}, routes={};
-  if (turnos===0){
-    weeks={'Wk1':2800,'Wk2':3100,'Wk3':2900,'Wk4':2650};
-    routes={'Rotterdam-Milan':12,'Antwerp-Hamburg':9,'Rotterdam-Paris':7};
-  } else {
-    shifts.forEach(s=>{
-      const d=new Date(s.start_time||Date.now());
-      const wk=weekOfYear(d);
-      const key='Wk'+wk;
-      weeks[key]=(weeks[key]||0)+(s.distance_km||0);
-      const rc=(s.start_city||'?')+'-'+(s.end_city||'?');
-      routes[rc]=(routes[rc]||0)+1;
-    });
-  }
-  makeBar(Object.keys(weeks), Object.values(weeks));
-  const rkeys=Object.keys(routes).slice(0,5), rvals=rkeys.map(k=>routes[k]);
-  makePie(rkeys, rvals);
-}
-function weekOfYear(d){const onejan=new Date(d.getFullYear(),0,1); return Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);}
-let barChart=null, pieChart=null;
-function makeBar(labels,data){
-  if(barChart) barChart.destroy();
-  barChart = new Chart(document.getElementById('bar'),{type:'bar',data:{labels,datasets:[{label:'Km',data}]} ,options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{color:'#c7c7c7'}, grid:{color:'#333'}}, x:{ticks:{color:'#c7c7c7'}}}});
-}
-function makePie(labels,data){
-  if(pieChart) pieChart.destroy();
-  pieChart = new Chart(document.getElementById('pie'),{type:'pie',data:{labels,datasets:[{data}]} ,options:{plugins:{legend:{position:'bottom'}}}});
-}
-
-// ---- Shifts + GPS + Reverse Geocode ----
-let map = L.map('map').setView([52.1,5.1],6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'OSM'}).addTo(map);
-let route = L.polyline([], {weight:5}).addTo(map);
-let startMarker=null, endMarker=null;
-let watchId=null, currentPoints=[], shiftStart=null, shiftEnd=null;
-
-function formatTime(t){return new Date(t).toLocaleString();}
-function fmtLatLng(a,b){return a.toFixed(5)+','+b.toFixed(5);}
-function updateStats(){
-  document.getElementById('gpsPoints').textContent=currentPoints.length;
-  document.getElementById('gpsDist').textContent=(calcDistance(currentPoints)/1000).toFixed(2)+' km';
-  document.getElementById('startInfo').textContent=shiftStart? formatTime(shiftStart.time)+' @ '+fmtLatLng(shiftStart.lat,shiftStart.lng):'—';
-  document.getElementById('endInfo').textContent=shiftEnd? formatTime(shiftEnd.time)+' @ '+fmtLatLng(shiftEnd.lat,shiftEnd.lng):'—';
-}
-function calcDistance(points){ if(points.length<2) return 0; let d=0; for(let i=1;i<points.length;i++){ d+=haversine(points[i-1],points[i]); } return d; }
-function haversine(a,b){ const R=6371000, toRad=x=>x*Math.PI/180; const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng); const lat1=toRad(a.lat), lat2=toRad(b.lat); const x=Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
-
-async function reverseGeocode(lat,lng){
-  try{
-    const url=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
-    const res=await fetch(url, {headers:{'Accept':'application/json'}});
-    const j=await res.json();
-    const city=j.address.city||j.address.town||j.address.village||j.address.municipality||'';
-    const country=j.address.country_code? j.address.country_code.toUpperCase(): (j.address.country || '');
-    return (city && country) ? `${city}, ${country}` : (j.display_name || '');
-  }catch(e){ return ''; }
-}
-
-document.getElementById('btnStart').onclick=async()=>{
-  if(!navigator.geolocation){ alert('No GPS'); return; }
-  document.getElementById('gpsStatus').textContent='starting…';
-  currentPoints=[]; route.setLatLngs([]);
-  if(startMarker){map.removeLayer(startMarker);} if(endMarker){map.removeLayer(endMarker);}
-  watchId=navigator.geolocation.watchPosition(async pos=>{
-    const {latitude,longitude}=pos.coords; const ll=[latitude,longitude];
-    currentPoints.push({lat:latitude,lng:longitude,t:Date.now()}); route.addLatLng(ll);
-    if(currentPoints.length===1){
-      shiftStart={lat:latitude,lng:longitude,time:Date.now()}; startMarker=L.marker(ll).addTo(map); map.setView(ll,14);
-      const sCity = await reverseGeocode(latitude, longitude);
-      if(sCity && !document.getElementById('s_city_start').value) document.getElementById('s_city_start').value = sCity;
-    }
-    updateStats();
-    document.getElementById('gpsStatus').textContent='recording'; document.getElementById('btnStart').disabled=true; document.getElementById('btnStop').disabled=false;
-  }, err=>{ console.error(err); document.getElementById('gpsStatus').textContent='error'; }, {enableHighAccuracy:true, maximumAge:1000, timeout:15000});
+document.getElementById('btnStart').onclick=()=>{
+  if(!navigator.geolocation){alert('Sem GPS');return;}
+  pts=[];line.setLatLngs([]);startTime=Date.now();document.getElementById('gpsStatus').textContent='recording';
+  watchId=navigator.geolocation.watchPosition(p=>{const ll=[p.coords.latitude,p.coords.longitude];pts.push({lat:ll[0],lng:ll[1]});line.addLatLng(ll);if(pts.length===1)map.setView(ll,14);},e=>{console.log(e);},{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  document.getElementById('btnStart').disabled=true;document.getElementById('btnStop').disabled=false;
 };
-
-document.getElementById('btnStop').onclick=async()=>{
-  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
-  const last=currentPoints[currentPoints.length-1]; if(last){ shiftEnd={lat:last.lat,lng:last.lng,time:Date.now()}; endMarker=L.marker([last.lat,last.lng]).addTo(map); const eCity = await reverseGeocode(last.lat,last.lng); if(eCity && !document.getElementById('s_city_end').value) document.getElementById('s_city_end').value = eCity; }
-  document.getElementById('gpsStatus').textContent='stopped'; document.getElementById('btnStart').disabled=false; document.getElementById('btnStop').disabled=true; updateStats(); saveShift();
+document.getElementById('btnStop').onclick=()=>{
+  if(watchId){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  document.getElementById('gpsStatus').textContent='stopped';
+  const rec={start_time:startTime,end_time:Date.now(),distance_km:+dist().toFixed(2),start_city:document.getElementById('s_city_start').value,end_city:document.getElementById('s_city_end').value,track:pts};
+  const arr=DB.get('shifts');arr.push(rec);DB.set('shifts',arr);renderShifts();
+  document.getElementById('btnStart').disabled=false;document.getElementById('btnStop').disabled=true;
 };
+document.getElementById('btnWaypoint').onclick=()=>{const c=map.getCenter();pts.push({lat:c.lat,lng:c.lng});line.addLatLng([c.lat,c.lng]);};
 
-document.getElementById('btnWaypoint').onclick=()=>{ const c=map.getCenter(); currentPoints.push({lat:c.lat,lng:c.lng,t:Date.now(),manual:true}); route.addLatLng(c); updateStats(); };
-document.getElementById('btnLoad').onclick=()=>{ document.getElementById('s_load_time').value=new Date().toISOString().slice(0,16); };
-document.getElementById('btnUnload').onclick=()=>{ document.getElementById('s_unload_time').value=new Date().toISOString().slice(0,16); };
-document.getElementById('btnClear').onclick=()=>{ currentPoints=[]; route.setLatLngs([]); if(startMarker){map.removeLayer(startMarker);startMarker=null} if(endMarker){map.removeLayer(endMarker);endMarker=null} shiftStart=null; shiftEnd=null; updateStats(); document.getElementById('gpsStatus').textContent='idle'; };
-
-function saveShift(){
-  if(!shiftStart){ alert('No start'); return; }
-  const distanceKm=(calcDistance(currentPoints)/1000);
-  const rec={
-    start_time: shiftStart.time, start_lat:shiftStart.lat, start_lng:shiftStart.lng,
-    end_time: shiftEnd?shiftEnd.time:null, end_lat: shiftEnd?shiftEnd.lat:null, end_lng: shiftEnd?shiftEnd.lng:null,
-    distance_km: Number(distanceKm.toFixed(2)),
-    note: val('s_note'), trailer_swap: val('s_swap'),
-    load_place: val('s_load'), load_time: val('s_load_time') || null,
-    unload_place: val('s_unload'), unload_time: val('s_unload_time') || null,
-    start_city: val('s_city_start'), end_city: val('s_city_end'),
-    km_start: num('s_km_start'), km_end: num('s_km_end'),
-    track: currentPoints
-  };
-  const arr=DB.get('shifts'); arr.push(rec); DB.set('shifts',arr); renderShifts(); computeOverview(); autoSyncIfEnabled();
-}
-function val(id){return document.getElementById(id).value.trim();}
-function num(id){return Number(document.getElementById(id).value||0);}
-
-function delShift(i){const arr=DB.get('shifts');arr.splice(i,1);DB.set('shifts',arr);renderShifts();computeOverview();}
-function previewRoute(i){
-  const r=DB.get('shifts')[i]; if(!r) return;
-  const latlngs=r.track.map(p=>[p.lat,p.lng]); route.setLatLngs(latlngs);
-  if(startMarker) map.removeLayer(startMarker); if(endMarker) map.removeLayer(endMarker);
-  if(latlngs.length){ startMarker=L.marker(latlngs[0]).addTo(map); endMarker=L.marker(latlngs.at(-1)).addTo(map); map.fitBounds(route.getBounds(),{padding:[20,20]}); }
-  document.querySelector('[data-tab="shifts"]').click();
-}
 function renderShifts(){
-  const tbody=document.querySelector('#shiftTable tbody'); tbody.innerHTML='';
-  const arr=DB.get('shifts').sort((a,b)=>a.start_time-b.start_time);
-  arr.forEach((r,i)=>{
-    const dur=(r.end_time&&r.start_time)? msToH(r.end_time-r.start_time):'—';
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.start_time?new Date(r.start_time).toLocaleString():''}</td>
-      <td>${r.end_time?new Date(r.end_time).toLocaleString():''}</td>
-      <td>${dur}</td>
-      <td>${(r.distance_km||0).toFixed(2)} km</td>
-      <td>${r.start_city||''}</td>
-      <td>${r.end_city||''}</td>
-      <td>${r.km_start||''}</td>
-      <td>${r.km_end||''}</td>
-      <td>${r.load_place||''} / ${r.unload_place||''}</td>
-      <td>${r.trailer_swap||''}</td>
-      <td>${r.note||''}</td>
-      <td><button onclick="previewRoute(${i})">View</button> <button onclick="pdfShift(${i})">PDF</button> <button onclick="delShift(${i})">Del</button></td>`;
-    tbody.appendChild(tr);
-  });
+  const tbody=document.querySelector('#shiftTable tbody');tbody.innerHTML='';
+  DB.get('shifts').forEach((r,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${new Date(r.start_time).toLocaleString()}</td><td>${new Date(r.end_time).toLocaleString()}</td><td>${r.distance_km} km</td><td>${r.start_city||''}</td><td>${r.end_city||''}</td><td><button onclick="view(${i})">View</button></td>`;tbody.appendChild(tr);});
 }
-function msToH(ms){const h=ms/3600000;const H=Math.floor(h);const M=Math.round((h-H)*60);return `${H}h ${M}m`;}
-
-// ---- Fuel ----
-document.getElementById('btnAddFuel').onclick=()=>{
-  const rec={date:(val('f_date')||new Date().toISOString()).slice(0,16),odo:num('f_odo'),liters:Number(val('f_liters')||0),total:Number(val('f_total')||0),type:document.getElementById('f_type').value,brand:val('f_brand'),notes:val('f_notes')};
-  const arr=DB.get('fuel');arr.push(rec);DB.set('fuel',arr);renderFuel();['f_date','f_odo','f_liters','f_total','f_brand','f_notes'].forEach(i=>document.getElementById(i).value='');computeOverview(); autoSyncIfEnabled();
-};
-document.getElementById('btnClearFuel').onclick=()=>['f_date','f_odo','f_liters','f_total','f_brand','f_notes'].forEach(i=>document.getElementById(i).value='');
-function delFuel(i){const arr=DB.get('fuel');arr.splice(i,1);DB.set('fuel',arr);renderFuel();}
-function renderFuel(){
-  const tbody=document.querySelector('#fuelTable tbody'); tbody.innerHTML='';
-  const arr=DB.get('fuel').sort((a,b)=>new Date(a.date)-new Date(b.date));
-  arr.forEach((r,i)=>{
-    const prev=i>0?arr[i-1]:null; const dkm=prev? (r.odo-prev.odo):0; const ppl=r.liters? (r.total/r.liters):0; const l100=(dkm>0&&r.liters>0)? (r.liters/dkm*100):0;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.date.replace('T',' ')}</td><td>${r.odo||''}</td><td>${r.liters||''}</td><td>${r.total||''}</td><td>${ppl?ppl.toFixed(3):''}</td><td><span class="pill">${r.type||''}</span></td><td>${r.brand||''}</td><td>${dkm||''}</td><td>${l100?l100.toFixed(2):''}</td><td><button onclick="delFuel(${i})">Del</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-// ---- Maintenance ----
-document.getElementById('btnAddMaint').onclick=()=>{
-  const rec={task:val('m_task'),cat:document.getElementById('m_cat').value,date:val('m_date'),km:num('m_km'),next_date:val('m_next_date'),next_km:num('m_next_km'),notes:val('m_notes')};
-  const arr=DB.get('maint');arr.push(rec);DB.set('maint',arr);renderMaint();['m_task','m_date','m_km','m_next_date','m_next_km','m_notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('m_cat').value='Engine'; autoSyncIfEnabled();
-};
-document.getElementById('btnClearMaint').onclick=()=>['m_task','m_date','m_km','m_next_date','m_next_km','m_notes'].forEach(i=>document.getElementById(i).value='');
-function delMaint(i){const arr=DB.get('maint');arr.splice(i,1);DB.set('maint',arr);renderMaint();}
-function renderMaint(){
-  const tbody=document.querySelector('#maintTable tbody'); tbody.innerHTML='';
-  const arr=DB.get('maint').sort((a,b)=>{if(a.date&&b.date) return new Date(a.date)-new Date(b.date); return (a.km||0)-(b.km||0)});
-  arr.forEach((r,i)=>{
-    const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.task||''}</td><td><span class="pill">${r.cat||''}</span></td><td>${r.date||''}</td><td>${r.km||''}</td><td>${r.next_date||''}</td><td>${r.next_km||''}</td><td>${r.notes||''}</td><td><button onclick="delMaint(${i})">Del</button></td>`; tbody.appendChild(tr);
-  });
-}
-
-// ---- CSV ----
-function toCSV(arr){if(!arr.length) return ''; const headers=Object.keys(arr[0]); const esc=v=>('\"'+String(v).replaceAll('\"','\"\"')+'\"'); const rows=[headers.join(',')]; arr.forEach(o=>rows.push(headers.map(h=>esc(o[h]??'')).join(','))); return rows.join('\n');}
-function download(name,text){const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(text);a.download=name;document.body.appendChild(a);a.click();a.remove();}
-
-document.getElementById('expShift').onclick=()=>{ const arr=DB.get('shifts').map(x=>({...x, track: JSON.stringify(x.track)})); download('shifts.csv', toCSV(arr)); };
-document.getElementById('expFuel').onclick=()=> download('fuel.csv', toCSV(DB.get('fuel')));
-document.getElementById('expMaint').onclick=()=> download('maint.csv', toCSV(DB.get('maint')));
-document.getElementById('wipe').onclick=()=>{ if(confirm('Delete ALL data?')){ localStorage.clear(); renderAll(); computeOverview(); } };
-
-// ---- PDF (A5) ----
-async function pdfShift(idx){
-  const { jsPDF } = window.jspdf; const doc = new jsPDF({format:'a5'});
-  const r = DB.get('shifts')[idx];
-  if(!r){ alert('shift not found'); return; }
-  doc.setFontSize(14); doc.text(`Shift Report: ${r.start_city||''} → ${r.end_city||''}`,10,12);
-  doc.setFontSize(10);
-  doc.text(`Start: ${new Date(r.start_time).toLocaleString()} (${(r.start_lat||'').toFixed? r.start_lat.toFixed(3):''}, ${(r.start_lng||'').toFixed? r.start_lng.toFixed(3):''})`,10,22);
-  doc.text(`End: ${r.end_time? new Date(r.end_time).toLocaleString():'—'} (${(r.end_lat||'').toFixed? r.end_lat.toFixed(3):''}, ${(r.end_lng||'').toFixed? r.end_lng.toFixed(3):''})`,10,28);
-  doc.text(`Km: ${r.km_start||'-'} → ${r.km_end||'-'} (Dist: ${(r.distance_km||0).toFixed(2)} km)`,10,34);
-  doc.text(`Load: ${r.load_place||'-'} @ ${r.load_time||'-'}`,10,40);
-  doc.text(`Unload: ${r.unload_place||'-'} @ ${r.unload_time||'-'}`,10,46);
-  doc.text(`Swap: ${r.trailer_swap||'-'}`,10,52);
-  doc.text(`Notes: ${r.note||'-'}`,10,58);
-
-  // mini-mapa: screenshot da área do mapa
-  const mapEl = document.getElementById('map');
-  const imgCanvas = await html2canvas(mapEl, {useCORS:true, backgroundColor:'#ffffff', scale:1});
-  const img = imgCanvas.toDataURL('image/png');
-  doc.addImage(img,'PNG',10,64,120,70);
-  doc.save('shift.pdf');
-}
-
-document.getElementById('pdfLast').onclick=()=>{
-  const arr=DB.get('shifts'); if(arr.length===0){alert('No shifts'); return;} pdfShift(arr.length-1);
-};
-
-document.getElementById('pdfMonth').onclick=async()=>{
-  const { jsPDF } = window.jspdf; const doc = new jsPDF({format:'a5'});
-  const arr=DB.get('shifts'); doc.setFontSize(14); doc.text('Monthly Report',10,12);
-  let totalKm=0,totalH=0; arr.forEach(s=>{ totalKm+=s.distance_km||0; if(s.end_time&&s.start_time){ totalH+=(s.end_time-s.start_time)/3600000; }});
-  doc.setFontSize(10); doc.text(`Turnos: ${arr.length}`,10,20); doc.text(`Total km: ${totalKm.toFixed(0)}`,10,26); doc.text(`Horas: ${totalH.toFixed(1)}`,10,32);
-  // simple list
-  let y=40;
-  arr.slice(-12).forEach(s=>{ doc.text(`${new Date(s.start_time).toLocaleDateString()} ${s.start_city||''}→${s.end_city||''} - ${(s.distance_km||0).toFixed(0)} km`,10,y); y+=6; if(y>130){ doc.addPage(); y=14; } });
-  doc.save('monthly.pdf');
-};
-
-// ---- SETTINGS & SYNC ----
-function loadSettings(){
-  const cfg=CFG.get();
-  document.getElementById('st_alias').value = cfg.alias || '';
-  document.getElementById('st_autosync').value = cfg.autosync || 'off';
-  document.getElementById('st_url').value = cfg.url || '';
-  document.getElementById('st_key').value = cfg.key || '';
-  document.getElementById('st_pass').value = cfg.pass || '';
-  document.getElementById('st_last').value = cfg.last_sync || '';
-}
-document.getElementById('btnSaveSettings').onclick=()=>{
-  const cfg={
-    alias: val('st_alias'),
-    autosync: document.getElementById('st_autosync').value,
-    url: val('st_url'),
-    key: val('st_key'),
-    pass: val('st_pass'),
-    last_sync: CFG.get().last_sync || ''
-  }; CFG.set(cfg); alert('Saved ✅');
-};
-async function collectData(){
-  return {
-    version: '3-admin',
-    device_id: DEVICE_ID,
-    alias: CFG.get().alias || '',
-    at: new Date().toISOString(),
-    shifts: DB.get('shifts'),
-    fuel: DB.get('fuel'),
-    maint: DB.get('maint')
-  };
-}
-async function encryptPayload(passphrase, obj){
-  if(!passphrase) return { mode:'plain', data: obj };
-  const enc = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-  const key = await crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt']);
-  const cipher = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(JSON.stringify(obj)));
-  function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-  return { mode:'aes-gcm', salt: b64(salt), iv: b64(iv), ciphertext: b64(cipher) };
-}
-async function syncNow(){
-  const cfg=CFG.get(); if(!cfg.url){ alert('Set Sync URL'); return; }
-  const data = await collectData();
-  const payload = await encryptPayload(cfg.pass, data);
-  const res = await fetch(cfg.url, { method:'POST', headers:{'Content-Type':'application/json','Authorization': cfg.key? ('Bearer '+cfg.key):''}, body: JSON.stringify(payload)}).catch(e=>({ok:false, statusText:e.message}));
-  if(res && res.ok){ const now=new Date().toISOString(); CFG.set({...cfg, last_sync: now}); document.getElementById('st_last').value=now; alert('Synced ✅'); } else { alert('Sync failed ❌'); }
-}
-document.getElementById('btnTestSync').onclick=syncNow;
-document.getElementById('btnSyncNow').onclick=syncNow;
-function autoSyncIfEnabled(){ const cfg=CFG.get(); if(cfg.autosync==='on') syncNow(); }
-
-// ---- Init ----
-function renderAll(){renderShifts();renderFuel();renderMaint();}
-loadSettings(); renderAll(); computeOverview();
+function view(i){const r=DB.get('shifts')[i];if(!r)return;line.setLatLngs(r.track.map(p=>[p.lat,p.lng]));map.fitBounds(line.getBounds(),{padding:[20,20]});showTab('shifts');}
+function exportCSV(){const a=DB.get('shifts');const rows=['start_time,end_time,distance_km,start_city,end_city'];a.forEach(r=>rows.push([r.start_time,r.end_time,r.distance_km,`"${r.start_city}"`,`"${r.end_city}"`].join(',')));const blob=new Blob([rows.join('\n')],{type:'text/csv'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='shifts.csv';link.click();URL.revokeObjectURL(url);}
+renderShifts();
 </script>
-</body>
-</html>
+</body></html>
