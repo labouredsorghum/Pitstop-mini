@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111111"/>
+  <link rel="manifest" href="manifest.json">
+  <title>PitStop Mini</title>
+  <style>
+    :root { --bg:#0f0f10; --card:#18191b; --text:#eaeaea; --muted:#9aa0a6; --accent:#4caf50; --danger:#e53935; }
+    *{box-sizing:border-box} body{margin:0;font-family:-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:var(--bg);color:var(--text);}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#101113 70%, transparent);padding:16px 16px 8px;border-bottom:1px solid #222}
+    h1{margin:0;font-size:22px;letter-spacing:.3px} .sub{color:var(--muted);font-size:12px;margin-top:4px}
+    .tabs{display:flex;gap:8px;margin:10px 0 0;flex-wrap:wrap}
+    .tab{flex:1;text-align:center;padding:10px;border:1px solid #2a2a2a;border-radius:10px;background:#141516;color:var(--muted);cursor:pointer}
+    .tab.active{background:#1c1d1f;color:var(--text);border-color:#3a3a3a}
+    main{padding:16px;max-width:900px;margin:0 auto}
+    .card{background:var(--card);border:1px solid #242629;border-radius:14px;padding:14px;margin-bottom:14px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input, select {width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a2a;background:#111214;color:var(--text);outline:none}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{padding:12px 14px;border-radius:10px;border:1px solid #2a2a2a;background:#17181a;color:var(--text);cursor:pointer}
+    .primary{background:var(--accent);border-color:#3e8e41}
+    .danger{background:var(--danger);border-color:#b71c1c}
+    table{width:100%;border-collapse:collapse} th, td{padding:10px;border-bottom:1px solid #2a2a2a;font-size:13px}
+    th{color:#cfcfcf;text-align:left}
+    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#232428;color:#cfd8dc;border:1px solid #2a2a2a}
+    .footer{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚗 PitStop Mini</h1>
+    <div class="sub">Fuel & Maintenance — Offline-first • Add to Home Screen for full-app vibes</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="fuel">Fuel Log</div>
+      <div class="tab" data-tab="maint">Maintenance</div>
+      <div class="tab" data-tab="export">Export</div>
+      <div class="tab" data-tab="about">About</div>
+    </div>
+  </header>
+  <main>
+    <section id="fuel" class="view">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Date & time</label>
+            <input type="datetime-local" id="f_date">
+          </div>
+          <div>
+            <label>Odometer (km)</label>
+            <input type="number" id="f_odo" placeholder="e.g. 314000">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Liters</label>
+            <input type="number" step="0.001" id="f_liters" placeholder="e.g. 68.5">
+          </div>
+          <div>
+            <label>Total Price (€)</label>
+            <input type="number" step="0.01" id="f_total" placeholder="e.g. 123.45">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Fuel Type</label>
+            <select id="f_type">
+              <option>95 E10</option>
+              <option>98 E5</option>
+              <option>Diesel B7</option>
+              <option>GPL</option>
+            </select>
+          </div>
+          <div>
+            <label>Brand / Station</label>
+            <input id="f_brand" placeholder="e.g. Shell NL">
+          </div>
+        </div>
+        <div>
+          <label>Notes</label>
+          <input id="f_notes" placeholder="Optional">
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+          <button class="primary" onclick="addFuel()">Add Fill-up</button>
+          <button onclick="clearFuel()">Clear Fields</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="fuelTable">
+          <thead>
+            <tr>
+              <th>Date</th><th>Odo</th><th>L</th><th>€</th><th>/L</th><th>Type</th><th>Brand</th><th>Δkm</th><th>L/100</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="maint" class="view" style="display:none">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Task</label>
+            <input id="m_task" placeholder="e.g. Engine oil + filter">
+          </div>
+          <div>
+            <label>Category</label>
+            <select id="m_cat">
+              <option>Engine</option>
+              <option>Brakes</option>
+              <option>Suspension</option>
+              <option>Tyres</option>
+              <option>Electrical</option>
+              <option>Fluids</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Done on (date)</label>
+            <input type="date" id="m_date">
+          </div>
+          <div>
+            <label>Done at (km)</label>
+            <input type="number" id="m_km" placeholder="e.g. 314000">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Next due (date)</label>
+            <input type="date" id="m_next_date">
+          </div>
+          <div>
+            <label>Next due (km)</label>
+            <input type="number" id="m_next_km" placeholder="e.g. 324000">
+          </div>
+        </div>
+        <div>
+          <label>Notes</label>
+          <input id="m_notes" placeholder="Optional">
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+          <button class="primary" onclick="addMaint()">Add Record</button>
+          <button onclick="clearMaint()">Clear Fields</button>
+        </div>
+      </div>
+      <div class="card">
+        <table id="maintTable">
+          <thead>
+            <tr><th>Task</th><th>Cat</th><th>Done</th><th>@km</th><th>Next</th><th>Due km</th><th>Notes</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="export" class="view" style="display:none">
+      <div class="card">
+        <p>Export your data as CSV files (can open in Excel/Numbers):</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button onclick="exportCSV('fuel')">Export Fuel CSV</button>
+          <button onclick="exportCSV('maint')">Export Maintenance CSV</button>
+          <button class="danger" onclick="wipeAll()">Wipe All Data</button>
+        </div>
+      </div>
+      <div class="card">
+        <p class="footer">Tip: add this app to your Home Screen in Safari (Share → Add to Home Screen) for an app-like experience.</p>
+      </div>
+    </section>
+
+    <section id="about" class="view" style="display:none">
+      <div class="card">
+        <p><strong>PitStop Mini</strong> — built for João. Offline-first, privacy-friendly. Data stays on your device (localStorage).</p>
+        <p>Fields are kept intentionally simple for fast entry at the pump or garage.</p>
+        <ul>
+          <li>Auto-calcs: price per liter, distance since last fill-up, and L/100km.</li>
+          <li>Maintenance reminders via due km/date columns.</li>
+          <li>CSV export for backups and spreadsheets.</li>
+        </ul>
+        <p>Made with ❤️ in vanilla HTML/CSS/JS.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // PWA install
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+
+    // Tab handling
+    const tabs = document.querySelectorAll('.tab');
+    const views = document.querySelectorAll('.view');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      views.forEach(v=>v.style.display='none');
+      document.getElementById(t.dataset.tab).style.display='block';
+    }));
+
+    // Storage helpers
+    const DB = {
+      get: (k) => JSON.parse(localStorage.getItem(k) || '[]'),
+      set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+    };
+
+    // Fuel logic
+    function addFuel(){
+      const rec = {
+        date: (document.getElementById('f_date').value || new Date().toISOString()).slice(0,16),
+        odo: Number(document.getElementById('f_odo').value||0),
+        liters: Number(document.getElementById('f_liters').value||0),
+        total: Number(document.getElementById('f_total').value||0),
+        type: document.getElementById('f_type').value,
+        brand: document.getElementById('f_brand').value.trim(),
+        notes: document.getElementById('f_notes').value.trim()
+      };
+      const arr = DB.get('fuel'); arr.push(rec); DB.set('fuel', arr);
+      renderFuel(); clearFuel();
+    }
+    function clearFuel(){
+      ['f_date','f_odo','f_liters','f_total','f_brand','f_notes'].forEach(id=>document.getElementById(id).value='');
+    }
+    function delFuel(idx){
+      const arr = DB.get('fuel'); arr.splice(idx,1); DB.set('fuel',arr); renderFuel();
+    }
+    function renderFuel(){
+      const tbody = document.querySelector('#fuelTable tbody'); tbody.innerHTML='';
+      const arr = DB.get('fuel').sort((a,b)=>new Date(a.date)-new Date(b.date));
+      for(let i=0;i<arr.length;i++){
+        const r = arr[i];
+        const prev = i>0 ? arr[i-1] : null;
+        const dkm = prev? (r.odo - prev.odo) : 0;
+        const pricePerL = r.liters ? (r.total / r.liters) : 0;
+        const l100 = (dkm>0 && r.liters>0) ? (r.liters / dkm * 100) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.date.replace('T',' ')}</td>
+          <td>${r.odo||''}</td>
+          <td>${r.liters||''}</td>
+          <td>${r.total||''}</td>
+          <td>${pricePerL?pricePerL.toFixed(3):''}</td>
+          <td><span class="pill">${r.type||''}</span></td>
+          <td>${r.brand||''}</td>
+          <td>${dkm||''}</td>
+          <td>${l100?l100.toFixed(2):''}</td>
+          <td><button onclick="delFuel(${i})">Delete</button></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // Maintenance logic
+    function addMaint(){
+      const rec = {
+        task: document.getElementById('m_task').value.trim(),
+        cat: document.getElementById('m_cat').value,
+        date: document.getElementById('m_date').value,
+        km: Number(document.getElementById('m_km').value||0),
+        next_date: document.getElementById('m_next_date').value,
+        next_km: Number(document.getElementById('m_next_km').value||0),
+        notes: document.getElementById('m_notes').value.trim()
+      };
+      const arr = DB.get('maint'); arr.push(rec); DB.set('maint', arr);
+      renderMaint(); clearMaint();
+    }
+    function clearMaint(){
+      ['m_task','m_date','m_km','m_next_date','m_next_km','m_notes'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('m_cat').value='Engine';
+    }
+    function delMaint(idx){
+      const arr = DB.get('maint'); arr.splice(idx,1); DB.set('maint',arr); renderMaint();
+    }
+    function renderMaint(){
+      const tbody = document.querySelector('#maintTable tbody'); tbody.innerHTML='';
+      const arr = DB.get('maint').sort((a,b)=>{
+        if (a.date && b.date) return new Date(a.date) - new Date(b.date);
+        return (a.km||0)-(b.km||0);
+      });
+      for(let i=0;i<arr.length;i++){
+        const r = arr[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.task||''}</td>
+          <td><span class="pill">${r.cat||''}</span></td>
+          <td>${r.date||''}</td>
+          <td>${r.km||''}</td>
+          <td>${r.next_date||''}</td>
+          <td>${r.next_km||''}</td>
+          <td>${r.notes||''}</td>
+          <td><button onclick="delMaint(${i})">Delete</button></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // CSV export
+    function toCSV(arr){
+      if(!arr.length) return '';
+      const headers = Object.keys(arr[0]);
+      const esc = v => ('"'+String(v).replaceAll('"','""')+'"');
+      const rows = [headers.join(',')];
+      for(const obj of arr){
+        rows.push(headers.map(h=>esc(obj[h]??'')).join(','));
+      }
+      return rows.join('\n');
+    }
+    function download(filename, text) {
+      const el = document.createElement('a');
+      el.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
+      el.setAttribute('download', filename);
+      el.style.display = 'none'; document.body.appendChild(el); el.click(); document.body.removeChild(el);
+    }
+    function exportCSV(which){
+      const arr = DB.get(which);
+      const csv = toCSV(arr);
+      const dt = new Date().toISOString().slice(0,10);
+      download(`pitstop_${which}_${dt}.csv`, csv);
+    }
+
+    function wipeAll(){
+      if(confirm('Delete ALL data? This cannot be undone.')){
+        localStorage.removeItem('fuel'); localStorage.removeItem('maint');
+        renderFuel(); renderMaint();
+      }
+    }
+
+    // init
+    renderFuel(); renderMaint();
+  </script>
+</body>
+</html>
