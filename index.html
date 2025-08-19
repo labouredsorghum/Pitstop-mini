@@ -1,335 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#111111"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#0b0d10"/>
   <link rel="manifest" href="manifest.json">
-  <title>PitStop Mini</title>
+  <title>PitStop Pro</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <style>
-    :root { --bg:#0f0f10; --card:#18191b; --text:#eaeaea; --muted:#9aa0a6; --accent:#4caf50; --danger:#e53935; }
-    *{box-sizing:border-box} body{margin:0;font-family:-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;background:var(--bg);color:var(--text);}
-    header{position:sticky;top:0;background:linear-gradient(180deg,#101113 70%, transparent);padding:16px 16px 8px;border-bottom:1px solid #222}
-    h1{margin:0;font-size:22px;letter-spacing:.3px} .sub{color:var(--muted);font-size:12px;margin-top:4px}
-    .tabs{display:flex;gap:8px;margin:10px 0 0;flex-wrap:wrap}
-    .tab{flex:1;text-align:center;padding:10px;border:1px solid #2a2a2a;border-radius:10px;background:#141516;color:var(--muted);cursor:pointer}
-    .tab.active{background:#1c1d1f;color:var(--text);border-color:#3a3a3a}
-    main{padding:16px;max-width:900px;margin:0 auto}
-    .card{background:var(--card);border:1px solid #242629;border-radius:14px;padding:14px;margin-bottom:14px}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input, select {width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a2a;background:#111214;color:var(--text);outline:none}
+    :root{--bg:#0b0d10;--card:#15181c;--text:#e8eaed;--muted:#a1a7b3;--accent:#00c853;--danger:#e53935}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0b0d10 80%,transparent);padding:14px 16px;border-bottom:1px solid #1f2328}
+    h1{margin:0;font-size:22px} .sub{color:var(--muted);font-size:12px;margin-top:4px}
+    .tabs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .tab{flex:1;text-align:center;padding:10px;border:1px solid #293037;border-radius:10px;background:#121417;color:var(--muted);cursor:pointer}
+    .tab.active{background:#1a1d22;color:var(--text);border-color:#3a434d}
+    main{padding:14px;max-width:1100px;margin:0 auto}
+    .view{}
+    .card{background:var(--card);border:1px solid #242a31;border-radius:14px;padding:12px;margin-bottom:12px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #2a3139;background:#0e1114;color:var(--text)}
+    textarea{min-height:70px;resize:vertical}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    button{padding:12px 14px;border-radius:10px;border:1px solid #2a2a2a;background:#17181a;color:var(--text);cursor:pointer}
-    .primary{background:var(--accent);border-color:#3e8e41}
-    .danger{background:var(--danger);border-color:#b71c1c}
-    table{width:100%;border-collapse:collapse} th, td{padding:10px;border-bottom:1px solid #2a2a2a;font-size:13px}
-    th{color:#cfcfcf;text-align:left}
-    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#232428;color:#cfd8dc;border:1px solid #2a2a2a}
-    .footer{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    button{padding:11px 12px;border-radius:10px;border:1px solid #2a3139;background:#15181c;color:var(--text);cursor:pointer}
+    .primary{background:var(--accent);border-color:#00a846}
+    .danger{background:var(--danger);border-color:#c62828}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #2a3139;font-size:12px;text-align:left}
+    .pill{font-size:11px;padding:3px 8px;border-radius:999px;background:#21262d;border:1px solid #2a3139;color:#cfd8dc}
+    #map{width:100%;height:360px;border-radius:12px;border:1px solid #293037}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:800px){.row,.row3,.grid{grid-template-columns:1fr} #map{height:300px}}
   </style>
 </head>
 <body>
-  <header>
-    <h1>🚗 PitStop Mini</h1>
-    <div class="sub">Fuel & Maintenance — Offline-first • Add to Home Screen for full-app vibes</div>
-    <div class="tabs">
-      <div class="tab active" data-tab="fuel">Fuel Log</div>
-      <div class="tab" data-tab="maint">Maintenance</div>
-      <div class="tab" data-tab="export">Export</div>
-      <div class="tab" data-tab="about">About</div>
+<header>
+  <h1>🚚 PitStop Pro</h1>
+  <div class="sub">Shifts + Route + Fuel + Maintenance — offline-ish</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="shifts">Shifts</div>
+    <div class="tab" data-tab="fuel">Fuel</div>
+    <div class="tab" data-tab="maint">Maintenance</div>
+    <div class="tab" data-tab="export">Export</div>
+    <div class="tab" data-tab="about">About</div>
+  </div>
+</header>
+<main>
+  <!-- SHIFTS -->
+  <section id="shifts" class="view">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Driver note (optional)</label>
+          <input id="s_note" placeholder="Ex: carga sensível, EVAP check, etc.">
+        </div>
+        <div>
+          <label>Trailer swap?</label>
+          <input id="s_swap" placeholder="Ex: Troca no km 245, trailer ABC-123">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <button class="primary" id="btnStart" onclick="startShift()">▶️ Start shift (GPS)</button>
+        </div>
+        <div>
+          <button class="danger" id="btnStop" onclick="stopShift()" disabled>⏹ Stop shift</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Load (pick-up)</label>
+          <input id="s_load" placeholder="Local da carga">
+          <label>Load time</label>
+          <input id="s_load_time" type="datetime-local">
+        </div>
+        <div>
+          <label>Unload (delivery)</label>
+          <input id="s_unload" placeholder="Local da descarga">
+          <label>Unload time</label>
+          <input id="s_unload_time" type="datetime-local">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div id="map"></div>
+        <div style="margin-top:8px" class="grid">
+          <div>
+            <div><span class="pill">Status:</span> <span id="gpsStatus">idle</span></div>
+            <div><span class="pill">Points:</span> <span id="gpsPoints">0</span></div>
+            <div><span class="pill">Distance:</span> <span id="gpsDist">0.00 km</span></div>
+          </div>
+          <div>
+            <div><span class="pill">Start:</span> <span id="startInfo">—</span></div>
+            <div><span class="pill">End:</span> <span id="endInfo">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button onclick="markLoad()">📦 Mark Load Now</button>
+        <button onclick="markUnload()">🏁 Mark Unload Now</button>
+        <button onclick="addWaypoint()">➕ Add manual waypoint</button>
+        <button onclick="clearCurrent()">Clear current (not saved)</button>
+      </div>
     </div>
-  </header>
-  <main>
-    <section id="fuel" class="view">
-      <div class="card">
-        <div class="row">
-          <div>
-            <label>Date & time</label>
-            <input type="datetime-local" id="f_date">
-          </div>
-          <div>
-            <label>Odometer (km)</label>
-            <input type="number" id="f_odo" placeholder="e.g. 314000">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Liters</label>
-            <input type="number" step="0.001" id="f_liters" placeholder="e.g. 68.5">
-          </div>
-          <div>
-            <label>Total Price (€)</label>
-            <input type="number" step="0.01" id="f_total" placeholder="e.g. 123.45">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Fuel Type</label>
-            <select id="f_type">
-              <option>95 E10</option>
-              <option>98 E5</option>
-              <option>Diesel B7</option>
-              <option>GPL</option>
-            </select>
-          </div>
-          <div>
-            <label>Brand / Station</label>
-            <input id="f_brand" placeholder="e.g. Shell NL">
-          </div>
-        </div>
-        <div>
-          <label>Notes</label>
-          <input id="f_notes" placeholder="Optional">
-        </div>
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
-          <button class="primary" onclick="addFuel()">Add Fill-up</button>
-          <button onclick="clearFuel()">Clear Fields</button>
-        </div>
-      </div>
-      <div class="card">
-        <table id="fuelTable">
-          <thead>
-            <tr>
-              <th>Date</th><th>Odo</th><th>L</th><th>€</th><th>/L</th><th>Type</th><th>Brand</th><th>Δkm</th><th>L/100</th><th></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
 
-    <section id="maint" class="view" style="display:none">
-      <div class="card">
-        <div class="row">
-          <div>
-            <label>Task</label>
-            <input id="m_task" placeholder="e.g. Engine oil + filter">
-          </div>
-          <div>
-            <label>Category</label>
-            <select id="m_cat">
-              <option>Engine</option>
-              <option>Brakes</option>
-              <option>Suspension</option>
-              <option>Tyres</option>
-              <option>Electrical</option>
-              <option>Fluids</option>
-              <option>Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Done on (date)</label>
-            <input type="date" id="m_date">
-          </div>
-          <div>
-            <label>Done at (km)</label>
-            <input type="number" id="m_km" placeholder="e.g. 314000">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Next due (date)</label>
-            <input type="date" id="m_next_date">
-          </div>
-          <div>
-            <label>Next due (km)</label>
-            <input type="number" id="m_next_km" placeholder="e.g. 324000">
-          </div>
-        </div>
-        <div>
-          <label>Notes</label>
-          <input id="m_notes" placeholder="Optional">
-        </div>
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
-          <button class="primary" onclick="addMaint()">Add Record</button>
-          <button onclick="clearMaint()">Clear Fields</button>
-        </div>
+    <div class="card">
+      <h3 style="margin-top:0">Shift history</h3>
+      <table id="shiftTable">
+        <thead><tr>
+          <th>Start</th><th>End</th><th>Duration</th><th>Distance (km)</th>
+          <th>Load</th><th>Unload</th><th>Swap</th><th>Note</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FUEL (same as before but trimmed) -->
+  <section id="fuel" class="view" style="display:none">
+    <div class="card">
+      <div class="row">
+        <div><label>Date & time</label><input type="datetime-local" id="f_date"></div>
+        <div><label>Odometer (km)</label><input type="number" id="f_odo"></div>
       </div>
-      <div class="card">
-        <table id="maintTable">
-          <thead>
-            <tr><th>Task</th><th>Cat</th><th>Done</th><th>@km</th><th>Next</th><th>Due km</th><th>Notes</th><th></th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="row">
+        <div><label>Liters</label><input type="number" step="0.001" id="f_liters"></div>
+        <div><label>Total Price (€)</label><input type="number" step="0.01" id="f_total"></div>
       </div>
-    </section>
-
-    <section id="export" class="view" style="display:none">
-      <div class="card">
-        <p>Export your data as CSV files (can open in Excel/Numbers):</p>
-        <div style="display:flex; gap:8px; flex-wrap:wrap">
-          <button onclick="exportCSV('fuel')">Export Fuel CSV</button>
-          <button onclick="exportCSV('maint')">Export Maintenance CSV</button>
-          <button class="danger" onclick="wipeAll()">Wipe All Data</button>
-        </div>
+      <div class="row">
+        <div><label>Fuel Type</label><select id="f_type"><option>95 E10</option><option>98 E5</option><option>Diesel B7</option></select></div>
+        <div><label>Brand / Station</label><input id="f_brand"></div>
       </div>
-      <div class="card">
-        <p class="footer">Tip: add this app to your Home Screen in Safari (Share → Add to Home Screen) for an app-like experience.</p>
+      <div><label>Notes</label><input id="f_notes"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="primary" onclick="addFuel()">Add Fill-up</button>
+        <button onclick="clearFuel()">Clear</button>
       </div>
-    </section>
+    </div>
+    <div class="card">
+      <table id="fuelTable"><thead>
+        <tr><th>Date</th><th>Odo</th><th>L</th><th>€</th><th>/L</th><th>Type</th><th>Brand</th><th>Δkm</th><th>L/100</th><th></th></tr>
+      </thead><tbody></tbody></table>
+    </div>
+  </section>
 
-    <section id="about" class="view" style="display:none">
-      <div class="card">
-        <p><strong>PitStop Mini</strong> — built for João. Offline-first, privacy-friendly. Data stays on your device (localStorage).</p>
-        <p>Fields are kept intentionally simple for fast entry at the pump or garage.</p>
-        <ul>
-          <li>Auto-calcs: price per liter, distance since last fill-up, and L/100km.</li>
-          <li>Maintenance reminders via due km/date columns.</li>
-          <li>CSV export for backups and spreadsheets.</li>
-        </ul>
-        <p>Made with ❤️ in vanilla HTML/CSS/JS.</p>
+  <section id="maint" class="view" style="display:none">
+    <div class="card">
+      <div class="row">
+        <div><label>Task</label><input id="m_task"></div>
+        <div><label>Category</label><select id="m_cat"><option>Engine</option><option>Brakes</option><option>Suspension</option><option>Tyres</option><option>Electrical</option><option>Fluids</option><option>Other</option></select></div>
       </div>
-    </section>
-  </main>
+      <div class="row">
+        <div><label>Done on</label><input type="date" id="m_date"></div>
+        <div><label>Done at (km)</label><input type="number" id="m_km"></div>
+      </div>
+      <div class="row">
+        <div><label>Next due (date)</label><input type="date" id="m_next_date"></div>
+        <div><label>Next due (km)</label><input type="number" id="m_next_km"></div>
+      </div>
+      <div><label>Notes</label><input id="m_notes"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="primary" onclick="addMaint()">Add Record</button>
+        <button onclick="clearMaint()">Clear</button>
+      </div>
+    </div>
+    <div class="card">
+      <table id="maintTable"><thead><tr><th>Task</th><th>Cat</th><th>Done</th><th>@km</th><th>Next</th><th>Due km</th><th>Notes</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+  </section>
 
-  <script>
-    // PWA install
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
+  <section id="export" class="view" style="display:none">
+    <div class="card">
+      <button onclick="exportCSV('shifts')">Export Shifts CSV</button>
+      <button onclick="exportCSV('fuel')">Export Fuel CSV</button>
+      <button onclick="exportCSV('maint')">Export Maintenance CSV</button>
+      <button class="danger" onclick="wipeAll()">Wipe ALL</button>
+    </div>
+  </section>
 
-    // Tab handling
-    const tabs = document.querySelectorAll('.tab');
-    const views = document.querySelectorAll('.view');
-    tabs.forEach(t => t.addEventListener('click', () => {
-      tabs.forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      views.forEach(v=>v.style.display='none');
-      document.getElementById(t.dataset.tab).style.display='block';
-    }));
+  <section id="about" class="view" style="display:none">
+    <div class="card">
+      <p><strong>PitStop Pro</strong> — built for João: shift tracker with GPS, route trace, load/unload, trailer swaps, notes + full history/export. Data stays on your device (localStorage).</p>
+      <p>Tip: add to Home Screen (Safari → Share → Add to Home Screen). Allow location access for GPS tracking.</p>
+    </div>
+  </section>
+</main>
 
-    // Storage helpers
-    const DB = {
-      get: (k) => JSON.parse(localStorage.getItem(k) || '[]'),
-      set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
-    };
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+// PWA SW
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('service-worker.js'));
+}
 
-    // Fuel logic
-    function addFuel(){
-      const rec = {
-        date: (document.getElementById('f_date').value || new Date().toISOString()).slice(0,16),
-        odo: Number(document.getElementById('f_odo').value||0),
-        liters: Number(document.getElementById('f_liters').value||0),
-        total: Number(document.getElementById('f_total').value||0),
-        type: document.getElementById('f_type').value,
-        brand: document.getElementById('f_brand').value.trim(),
-        notes: document.getElementById('f_notes').value.trim()
-      };
-      const arr = DB.get('fuel'); arr.push(rec); DB.set('fuel', arr);
-      renderFuel(); clearFuel();
-    }
-    function clearFuel(){
-      ['f_date','f_odo','f_liters','f_total','f_brand','f_notes'].forEach(id=>document.getElementById(id).value='');
-    }
-    function delFuel(idx){
-      const arr = DB.get('fuel'); arr.splice(idx,1); DB.set('fuel',arr); renderFuel();
-    }
-    function renderFuel(){
-      const tbody = document.querySelector('#fuelTable tbody'); tbody.innerHTML='';
-      const arr = DB.get('fuel').sort((a,b)=>new Date(a.date)-new Date(b.date));
-      for(let i=0;i<arr.length;i++){
-        const r = arr[i];
-        const prev = i>0 ? arr[i-1] : null;
-        const dkm = prev? (r.odo - prev.odo) : 0;
-        const pricePerL = r.liters ? (r.total / r.liters) : 0;
-        const l100 = (dkm>0 && r.liters>0) ? (r.liters / dkm * 100) : 0;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.date.replace('T',' ')}</td>
-          <td>${r.odo||''}</td>
-          <td>${r.liters||''}</td>
-          <td>${r.total||''}</td>
-          <td>${pricePerL?pricePerL.toFixed(3):''}</td>
-          <td><span class="pill">${r.type||''}</span></td>
-          <td>${r.brand||''}</td>
-          <td>${dkm||''}</td>
-          <td>${l100?l100.toFixed(2):''}</td>
-          <td><button onclick="delFuel(${i})">Delete</button></td>`;
-        tbody.appendChild(tr);
+// Tabs
+const tabs=[...document.querySelectorAll('.tab')], views=[...document.querySelectorAll('.view')];
+tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');views.forEach(v=>v.style.display='none');document.getElementById(t.dataset.tab).style.display='block'}));
+
+// Simple DB
+const DB={get:k=>JSON.parse(localStorage.getItem(k)||'[]'), set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+
+// Map setup
+let map = L.map('map').setView([52.1, 5.1], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution:'&copy; OpenStreetMap'}).addTo(map);
+let route = L.polyline([], {weight:5}).addTo(map);
+let startMarker = null, endMarker = null;
+
+// GPS vars
+let watchId = null;
+let currentPoints = [];
+let shiftStart = null, shiftEnd = null;
+
+function updateStats(){
+  document.getElementById('gpsPoints').textContent = currentPoints.length;
+  document.getElementById('gpsDist').textContent = (calcDistance(currentPoints)/1000).toFixed(2)+' km';
+  document.getElementById('startInfo').textContent = shiftStart? formatTime(shiftStart.time)+' @ '+fmtLatLng(shiftStart.lat,shiftStart.lng) : '—';
+  document.getElementById('endInfo').textContent = shiftEnd? formatTime(shiftEnd.time)+' @ '+fmtLatLng(shiftEnd.lat,shiftEnd.lng) : '—';
+}
+
+function fmtLatLng(a,b){return a.toFixed(5)+','+b.toFixed(5)}
+function formatTime(t){return new Date(t).toLocaleString()}
+
+function startShift(){
+  if(!navigator.geolocation){ alert('No GPS.'); return; }
+  document.getElementById('gpsStatus').textContent='starting…';
+  currentPoints=[]; route.setLatLngs([]);
+  if(startMarker){map.removeLayer(startMarker);} if(endMarker){map.removeLayer(endMarker);}
+  watchId = navigator.geolocation.watchPosition(pos=>{
+      const {latitude, longitude} = pos.coords;
+      const ll = [latitude, longitude];
+      currentPoints.push({lat:latitude, lng:longitude, t: Date.now()});
+      route.addLatLng(ll);
+      if(currentPoints.length===1){
+        shiftStart = {lat:latitude, lng:longitude, time: Date.now()};
+        startMarker = L.marker(ll, {title:'Start'}).addTo(map);
+        map.setView(ll, 14);
       }
-    }
+      updateStats();
+      document.getElementById('gpsStatus').textContent='recording';
+      document.getElementById('btnStart').disabled=true;
+      document.getElementById('btnStop').disabled=false;
+    },
+    err=>{ console.error(err); document.getElementById('gpsStatus').textContent='error';},
+    {enableHighAccuracy:true, maximumAge:1000, timeout:15000});
+}
 
-    // Maintenance logic
-    function addMaint(){
-      const rec = {
-        task: document.getElementById('m_task').value.trim(),
-        cat: document.getElementById('m_cat').value,
-        date: document.getElementById('m_date').value,
-        km: Number(document.getElementById('m_km').value||0),
-        next_date: document.getElementById('m_next_date').value,
-        next_km: Number(document.getElementById('m_next_km').value||0),
-        notes: document.getElementById('m_notes').value.trim()
-      };
-      const arr = DB.get('maint'); arr.push(rec); DB.set('maint', arr);
-      renderMaint(); clearMaint();
-    }
-    function clearMaint(){
-      ['m_task','m_date','m_km','m_next_date','m_next_km','m_notes'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('m_cat').value='Engine';
-    }
-    function delMaint(idx){
-      const arr = DB.get('maint'); arr.splice(idx,1); DB.set('maint',arr); renderMaint();
-    }
-    function renderMaint(){
-      const tbody = document.querySelector('#maintTable tbody'); tbody.innerHTML='';
-      const arr = DB.get('maint').sort((a,b)=>{
-        if (a.date && b.date) return new Date(a.date) - new Date(b.date);
-        return (a.km||0)-(b.km||0);
-      });
-      for(let i=0;i<arr.length;i++){
-        const r = arr[i];
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.task||''}</td>
-          <td><span class="pill">${r.cat||''}</span></td>
-          <td>${r.date||''}</td>
-          <td>${r.km||''}</td>
-          <td>${r.next_date||''}</td>
-          <td>${r.next_km||''}</td>
-          <td>${r.notes||''}</td>
-          <td><button onclick="delMaint(${i})">Delete</button></td>`;
-        tbody.appendChild(tr);
-      }
-    }
+function stopShift(){
+  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  const last = currentPoints[currentPoints.length-1];
+  if(last){ shiftEnd = {lat:last.lat, lng:last.lng, time: Date.now()}; endMarker = L.marker([last.lat,last.lng],{title:'End'}).addTo(map); }
+  document.getElementById('gpsStatus').textContent='stopped';
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnStop').disabled=true;
+  updateStats();
+  saveShift();
+}
 
-    // CSV export
-    function toCSV(arr){
-      if(!arr.length) return '';
-      const headers = Object.keys(arr[0]);
-      const esc = v => ('"'+String(v).replaceAll('"','""')+'"');
-      const rows = [headers.join(',')];
-      for(const obj of arr){
-        rows.push(headers.map(h=>esc(obj[h]??'')).join(','));
-      }
-      return rows.join('\n');
-    }
-    function download(filename, text) {
-      const el = document.createElement('a');
-      el.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
-      el.setAttribute('download', filename);
-      el.style.display = 'none'; document.body.appendChild(el); el.click(); document.body.removeChild(el);
-    }
-    function exportCSV(which){
-      const arr = DB.get(which);
-      const csv = toCSV(arr);
-      const dt = new Date().toISOString().slice(0,10);
-      download(`pitstop_${which}_${dt}.csv`, csv);
-    }
+function addWaypoint(){
+  if(!map) return;
+  const center = map.getCenter();
+  currentPoints.push({lat:center.lat, lng:center.lng, t: Date.now(), manual:true});
+  route.addLatLng(center);
+  updateStats();
+}
 
-    function wipeAll(){
-      if(confirm('Delete ALL data? This cannot be undone.')){
-        localStorage.removeItem('fuel'); localStorage.removeItem('maint');
-        renderFuel(); renderMaint();
-      }
-    }
+function markLoad(){
+  document.getElementById('s_load_time').value = new Date().toISOString().slice(0,16);
+  document.getElementById('s_load').placeholder='(captured) '+(shiftStart? fmtLatLng(shiftStart.lat,shiftStart.lng):'');
+}
+function markUnload(){
+  document.getElementById('s_unload_time').value = new Date().toISOString().slice(0,16);
+  const last = currentPoints[currentPoints.length-1];
+  document.getElementById('s_unload').placeholder='(captured) '+(last? fmtLatLng(last.lat,last.lng):'');
+}
 
-    // init
-    renderFuel(); renderMaint();
-  </script>
+function clearCurrent(){
+  currentPoints=[]; route.setLatLngs([]);
+  if(startMarker){map.removeLayer(startMarker); startMarker=null}
+  if(endMarker){map.removeLayer(endMarker); endMarker=null}
+  shiftStart=null; shiftEnd=null;
+  updateStats();
+  document.getElementById('gpsStatus').textContent='idle';
+}
+
+function calcDistance(points){
+  if(points.length<2) return 0;
+  let d=0;
+  for(let i=1;i<points.length;i++){
+    d += haversine(points[i-1], points[i]);
+  }
+  return d;
+}
+function haversine(a,b){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+  const lat1=toRad(a.lat), lat2=toRad(b.lat);
+  const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+
+function saveShift(){
+  if(!shiftStart){ alert('No start.'); return; }
+  const distanceKm = (calcDistance(currentPoints)/1000);
+  const rec = {
+    start_time: shiftStart.time,
+    start_lat: shiftStart.lat, start_lng: shiftStart.lng,
+    end_time: shiftEnd? shiftEnd.time : null,
+    end_lat: shiftEnd? shiftEnd.lat : null, end_lng: shiftEnd? shiftEnd.lng : null,
+    distance_km: Number(distanceKm.toFixed(2)),
+    note: document.getElementById('s_note').value.trim(),
+    trailer_swap: document.getElementById('s_swap').value.trim(),
+    load_place: document.getElementById('s_load').value.trim(),
+    load_time: document.getElementById('s_load_time').value || null,
+    unload_place: document.getElementById('s_unload').value.trim(),
+    unload_time: document.getElementById('s_unload_time').value || null,
+    track: currentPoints   // array of lat/lng/t
+  };
+  const arr = DB.get('shifts'); arr.push(rec); DB.set('shifts', arr);
+  renderShifts();
+}
+
+function delShift(idx){
+  const arr = DB.get('shifts'); arr.splice(idx,1); DB.set('shifts',arr); renderShifts();
+}
+
+function renderShifts(){
+  const tbody = document.querySelector('#shiftTable tbody'); tbody.innerHTML='';
+  const arr = DB.get('shifts').sort((a,b)=>a.start_time-b.start_time);
+  for(let i=0;i<arr.length;i++){
+    const r = arr[i];
+    const dur = (r.end_time && r.start_time)? msToH((r.end_time - r.start_time)) : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.start_time? new Date(r.start_time).toLocaleString():''}<br><span class="pill">${(r.start_lat||'').toFixed? r.start_lat.toFixed(3):''},${(r.start_lng||'').toFixed? r.start_lng.toFixed(3):''}</span></td>
+      <td>${r.end_time? new Date(r.end_time).toLocaleString():''}<br><span class="pill">${(r.end_lat||'').toFixed? r.end_lat.toFixed(3):''},${(r.end_lng||'').toFixed? r.end_lng.toFixed(3):''}</span></td>
+      <td>${dur}</td>
+      <td>${r.distance_km?.toFixed ? r.distance_km.toFixed(2) : r.distance_km}</td>
+      <td>${r.load_place||''}<br><span class="pill">${r.load_time||''}</span></td>
+      <td>${r.unload_place||''}<br><span class="pill">${r.unload_time||''}</span></td>
+      <td>${r.trailer_swap||''}</td>
+      <td>${r.note||''}</td>
+      <td><button onclick="previewRoute(${i})">View</button> <button onclick="delShift(${i})">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+function msToH(ms){ const h = ms/3600000; const hours=Math.floor(h); const mins=Math.round((h-hours)*60); return hours+'h '+mins+'m';}
+function previewRoute(idx){
+  const r = DB.get('shifts')[idx];
+  if(!r) return;
+  const latlngs = r.track.map(p=>[p.lat,p.lng]);
+  route.setLatLngs(latlngs);
+  if(startMarker) map.removeLayer(startMarker); if(endMarker) map.removeLayer(endMarker);
+  if(latlngs.length){ startMarker = L.marker(latlngs[0]).addTo(map); endMarker = L.marker(latlngs[latlngs.length-1]).addTo(map); map.fitBounds(route.getBounds(),{padding:[20,20]}); }
+  document.querySelector('[data-tab="shifts"]').click(); // stay here
+}
+
+// Fuel (same as previous app)
+function addFuel(){
+  const rec={
+    date:(document.getElementById('f_date').value||new Date().toISOString()).slice(0,16),
+    odo:Number(document.getElementById('f_odo').value||0),
+    liters:Number(document.getElementById('f_liters').value||0),
+    total:Number(document.getElementById('f_total').value||0),
+    type:document.getElementById('f_type').value,
+    brand:document.getElementById('f_brand').value.trim(),
+    notes:document.getElementById('f_notes').value.trim()
+  };
+  const arr=DB.get('fuel'); arr.push(rec); DB.set('fuel',arr); renderFuel(); clearFuel();
+}
+function clearFuel(){['f_date','f_odo','f_liters','f_total','f_brand','f_notes'].forEach(id=>document.getElementById(id).value='');}
+function delFuel(i){const arr=DB.get('fuel');arr.splice(i,1);DB.set('fuel',arr);renderFuel();}
+function renderFuel(){
+  const tbody=document.querySelector('#fuelTable tbody'); tbody.innerHTML='';
+  const arr=DB.get('fuel').sort((a,b)=>new Date(a.date)-new Date(b.date));
+  for(let i=0;i<arr.length;i++){
+    const r=arr[i], prev=i>0?arr[i-1]:null;
+    const dkm=prev? (r.odo-prev.odo):0, ppl=r.liters? (r.total/r.liters):0, l100=(dkm>0&&r.liters>0)? (r.liters/dkm*100):0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.date.replace('T',' ')}</td><td>${r.odo||''}</td><td>${r.liters||''}</td><td>${r.total||''}</td><td>${ppl?ppl.toFixed(3):''}</td><td><span class="pill">${r.type||''}</span></td><td>${r.brand||''}</td><td>${dkm||''}</td><td>${l100?l100.toFixed(2):''}</td><td><button onclick="delFuel(${i})">Delete</button></td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// Maint
+function addMaint(){
+  const rec={task:gid('m_task'), cat:document.getElementById('m_cat').value, date:gid('m_date'), km:Number(gid('m_km')||0), next_date:gid('m_next_date'), next_km:Number(gid('m_next_km')||0), notes:gid('m_notes')};
+  const arr=DB.get('maint');arr.push(rec);DB.set('maint',arr);renderMaint();clearMaint();
+}
+function clearMaint(){['m_task','m_date','m_km','m_next_date','m_next_km','m_notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('m_cat').value='Engine'}
+function delMaint(i){const arr=DB.get('maint');arr.splice(i,1);DB.set('maint',arr);renderMaint();}
+function renderMaint(){
+  const tbody=document.querySelector('#maintTable tbody'); tbody.innerHTML='';
+  const arr=DB.get('maint').sort((a,b)=>{if(a.date&&b.date) return new Date(a.date)-new Date(b.date); return (a.km||0)-(b.km||0)});
+  arr.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.task||''}</td><td><span class="pill">${r.cat||''}</span></td><td>${r.date||''}</td><td>${r.km||''}</td><td>${r.next_date||''}</td><td>${r.next_km||''}</td><td>${r.notes||''}</td><td><button onclick="delMaint(${i})">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function gid(id){return document.getElementById(id).value.trim()}
+
+// CSV export
+function toCSV(arr){ if(!arr.length) return ''; const headers = Object.keys(arr[0]); const esc=v=>('"'+String(v).replaceAll('"','""')+'"'); const rows=[headers.join(',')]; for(const o of arr){rows.push(headers.map(h=>esc(o[h]??'')).join(','));} return rows.join('\n');}
+function download(name, text){const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(text);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function exportCSV(which){const arr=DB.get(which); const out = which==='shifts'? arr.map(x=>({...x, track: JSON.stringify(x.track)})) : arr; const csv=toCSV(out); const dt=new Date().toISOString().slice(0,10); download(`pitstop_${which}_${dt}.csv`, csv);}
+
+// Init
+renderShifts(); renderFuel(); renderMaint(); updateStats();
+</script>
 </body>
 </html>
