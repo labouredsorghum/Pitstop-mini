@@ -9,46 +9,47 @@
 <style>
   :root{
     --blue:#1976D2; --blue-2:#2196F3; --green:#43A047; --red:#E53935; --orange:#FB8C00;
-    --grey-2:#eeeeee; --text:#111; --muted:#6b6b6b; --card:#ffffff;
-    --border:#d0d0d0; --shadow:0 6px 20px rgba(0,0,0,.08); --radius:14px;
+    --muted:#6b6b6b; --card:#ffffff; --border:#d0d0d0; --shadow:0 6px 20px rgba(0,0,0,.08); --radius:14px;
   }
   *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eceff1,#fafafa);color:var(--text)}
-  .app{max-width:420px;margin:0 auto;padding:16px 16px 80px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eceff1,#fafafa);color:#111}
+  .app{max-width:420px;margin:0 auto;padding:16px 16px 100px}
   header{position:sticky;top:0;z-index:5;background:var(--blue);color:#fff;border-bottom:1px solid rgba(255,255,255,.2);padding:14px 16px;border-radius:0 0 18px 18px;box-shadow:var(--shadow)}
-  .title{font-weight:700;letter-spacing:.3px}
-  .logo{display:flex;align-items:center;gap:10px;margin:8px 0 0;}
+  header .title{font-weight:700;letter-spacing:.3px}
+  .logo{display:flex;align-items:center;gap:10px;margin:8px 0 0;cursor:pointer}
   .logo .dot{width:28px;height:28px;border-radius:8px;background:#fff}
   .screen{display:none;animation:fade .2s ease}
   .screen.active{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 0}
-  .row{display:flex;gap:10px}
+  .row{display:flex;gap:10px;align-items:center}
   .col{flex:1}
   label{display:block;font-size:12px;color:var(--muted);margin:6px 2px}
-  input,textarea{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font-size:16px;outline:none}
+  input,select,textarea{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font-size:16px;outline:none}
   textarea{min-height:90px;resize:vertical}
-  .btn{display:inline-block;width:100%;text-align:center;padding:12px 14px;border-radius:12px;color:#fff;font-weight:700;border:none;cursor:pointer;box-shadow:var(--shadow);user-select:none}
-  .btn-blue{background:var(--blue-2)} .btn-grey{background:#757575} .btn-green{background:var(--green)} .btn-red{background:var(--red)} .btn-orange{background:var(--orange)}
+  .btn{display:inline-block;width:100%;text-align:center;padding:12px 14px;border-radius:12px;color:#fff;font-weight:700;border:none;cursor:pointer;box-shadow:var(--shadow);transition:transform .05s ease;user-select:none}
+  .btn:active{transform:translateY(1px)}
+  .btn-blue{background:var(--blue-2)} .btn-grey{background:#757575} .btn-green{background:#43A047} .btn-red{background:#E53935} .btn-orange{background:#FB8C00}
   .stack{display:grid;gap:10px}
   .muted{color:var(--muted)} .center{text-align:center}
   .toolbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 14px;box-shadow:0 -8px 24px rgba(0,0,0,.06)}
-  .toolbar .row{gap:12px}
+  .toolbar .row{gap:8px;flex-wrap:wrap}
   .hidden{display:none !important}
   .banner{position:sticky;top:0;margin:-8px -8px 10px;padding:8px 12px;border-radius:10px;font-size:13px;display:none}
   .banner.warn{background:#fff3cd;border:1px solid #ffeeba;color:#856404;display:block}
   .banner.ok{background:#e6ffec;border:1px solid #b7f5c0;color:#096a2e;display:block}
-  @media print{header,.toolbar{display:none !important}.app{max-width:none}.card{box-shadow:none}}
+  .seg{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .seg button{flex:1;background:#f5f5f5;color:#333;border:none;padding:10px}
+  .seg button.active{background:#1976D2;color:#fff}
+  .inline-hint{font-size:12px;color:#d9534f;margin-top:6px}
+  @media print{header,.toolbar,.no-print{display:none !important}.app{max-width:none}.card{box-shadow:none;border:none}}
 </style>
 </head>
 <body>
 <header>
   <div class="title">Driver App</div>
   <small id="today"></small>
-  <div id="logo" class="logo">
-    <div class="dot"></div>
-    <div><div style="font-weight:700">Driver Tools</div><small class="muted">Offline • Local only</small></div>
-  </div>
+  <div id="logo" class="logo"><div class="dot"></div><div><div style="font-weight:700">Driver Tools</div><small class="muted">Offline • Local only</small></div></div>
 </header>
 
 <main class="app">
@@ -69,16 +70,24 @@
   <!-- HOME -->
   <section class="screen" id="screen-home">
     <div class="card">
-      <div class="stack">
-        <button class="btn btn-blue" data-nav="hours">Log Hours</button>
-        <button class="btn btn-blue" data-nav="load">New Load</button>
-        <button class="btn btn-orange" id="btn-export">Generate PDF</button>
-        <button class="btn btn-grey" data-nav="settings">Settings</button>
-      </div>
-    </div>
-    <div class="card">
       <div style="font-weight:700;margin-bottom:6px">This week</div>
       <div id="summary-week" class="muted">No entries yet</div>
+    </div>
+    <div class="card no-print">
+      <div style="font-weight:700;margin-bottom:6px">Coming soon 🚀</div>
+      <ul style="margin:0 0 0 18px;padding:0;line-height:1.4">
+        <li>Weekly bar chart (hours per day)</li>
+        <li>Fuel section</li>
+        <li>Maintenance section</li>
+        <li>Trip log</li>
+        <li>Expenses</li>
+      </ul>
+    </div>
+    <div class="card no-print">
+      <div class="stack">
+        <button class="btn btn-orange" id="btn-hours-report">Hours Report PDF</button>
+        <button class="btn btn-orange" id="btn-loads-report">Loads Report PDF</button>
+      </div>
     </div>
   </section>
 
@@ -87,26 +96,26 @@
     <div class="card">
       <h3 style="margin:0 0 6px">Work Hours</h3>
       <label>Entry Date</label>
-      <input id="hours-date" type="date" value="2025-08-22">
+      <input id="hours-date" type="date" value=2025-08-22>
       <div class="row" style="margin-top:8px;margin-bottom:8px">
         <button class="btn btn-green col" id="btn-hours-start">Start Shift</button>
         <button class="btn btn-red col" id="btn-hours-end">End Shift</button>
         <button class="btn btn-blue col" id="btn-hours-gps">GPS Location</button>
       </div>
       <label>Location</label>
-      <input id="hours-location" placeholder="Set via GPS or enter manually">
+      <input id="hours-location" placeholder="PT - Ovar (auto) or hold 3s for manual">
+      <div id="loc-hint" class="inline-hint hidden"></div>
       <div class="row">
-        <div class="col">
-          <label>Start Time</label>
-          <input id="start-time" type="time" value="08:00">
-        </div>
-        <div class="col">
-          <label>End Time</label>
-          <input id="end-time" type="time" value="17:30">
-        </div>
+        <div class="col"><label>Start Time</label><input id="start-time" type="time" value="08:00"></div>
+        <div class="col"><label>End Time</label><input id="end-time" type="time" value="17:30"></div>
       </div>
       <label>Break (minutes)</label>
       <input id="break-mins" type="number" min="0" value="30">
+      <label>Type</label>
+      <div class="seg no-print">
+        <button id="kind-work" class="active">Work</button>
+        <button id="kind-drive">Driving</button>
+      </div>
       <div><b>Net Paid:</b> <span id="net-paid">—</span></div>
       <div class="muted" id="warn"></div>
       <div class="stack" style="margin-top:10px">
@@ -114,7 +123,6 @@
         <button class="btn btn-green" id="btn-save-hours">Save Entry</button>
       </div>
     </div>
-
     <div class="card">
       <h4 style="margin:0 0 8px">Saved Entries (Week)</h4>
       <div id="hours-list">—</div>
@@ -130,19 +138,19 @@
       <label>Start City</label>
       <input id="start-city" placeholder="City / Address">
       <label>Load Date</label>
-      <input id="load-date" type="date" value="2025-08-22">
+      <input id="load-date" type="date" value=2025-08-22>
       <label>Trailer Number</label>
       <input id="trailer-number" placeholder="e.g., TR-12345">
       <label>Load Temperature (°C)</label>
-      <input id="load-temp" type="number" step="0.1" placeholder="e.g., -18">
+      <input id="load-temp" type="number" step="0.1" placeholder="-25 … +20">
       <label>Load Description</label>
       <textarea id="load-desc" placeholder="e.g., Frozen goods, pallets…"></textarea>
       <label style="margin-top:8px">Unload Date</label>
-      <input id="unload-date" type="date" value="2025-08-22">
+      <input id="unload-date" type="date" value=2025-08-22>
       <label>Unload Location</label>
       <input id="unload-location" placeholder="City / Address">
       <label>Unload Temperature (°C)</label>
-      <input id="unload-temp" type="number" step="0.1" placeholder="e.g., -18">
+      <input id="unload-temp" type="number" step="0.1" placeholder="-25 … +20">
       <div class="stack">
         <button class="btn btn-green" id="btn-add-load">Add Load</button>
       </div>
@@ -153,26 +161,21 @@
     </div>
   </section>
 
-  <!-- SETTINGS -->
-  <section class="screen" id="screen-settings">
-    <div class="card">
-      <h3 style="margin:0 0 6px">Security</h3>
-      <div class="row">
-        <input id="new-pin" placeholder="New PIN (4–6 digits)" class="col">
-        <button class="btn btn-blue" id="btn-pin-change" style="width:150px">Change PIN</button>
-      </div>
-    </div>
-  </section>
-
   <!-- SUMMARY -->
   <section class="screen" id="screen-summary">
     <div class="card">
-      <h3 style="margin:0 0 6px">Hours Summary (Week)</h3>
-      <div id="summary-table">—</div>
+      <h3 style="margin:0 0 6px">Summary</h3>
+      <div id="admin-agg" class="muted hidden"></div>
+      <div class="seg no-print" id="summary-toggle">
+        <button data-vm="net" class="active">Net</button>
+        <button data-vm="drive">Driving</button>
+      </div>
+      <div id="summary-head" style="margin-top:10px">—</div>
+      <div id="summary-table" style="margin-top:8px">—</div>
     </div>
   </section>
 
-  <!-- FUEL (placeholder) -->
+  <!-- FUEL -->
   <section class="screen" id="screen-fuel">
     <div class="card">
       <h3 style="margin:0 0 6px">Fuel</h3>
@@ -180,7 +183,7 @@
     </div>
   </section>
 
-  <!-- MAINTENANCE (placeholder) -->
+  <!-- MAINTENANCE -->
   <section class="screen" id="screen-maintenance">
     <div class="card">
       <h3 style="margin:0 0 6px">Maintenance</h3>
@@ -188,7 +191,7 @@
     </div>
   </section>
 
-  <!-- ADMIN (hidden) -->
+  <!-- ADMIN -->
   <section class="screen" id="screen-admin">
     <div class="card">
       <h3 style="margin:0 0 6px">Admin</h3>
@@ -200,6 +203,26 @@
         <div id="storage-stats" class="muted">Storage: —</div>
       </div>
     </div>
+  </section>
+
+  <!-- PRINT SECTIONS -->
+  <section class="card" id="report-hours" style="display:none">
+    <h3>Hours Report</h3>
+    <div id="report-hours-meta" class="muted"></div>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px">
+      <thead><tr><th align="left">Date</th><th align="left">Start</th><th align="left">End</th><th align="left">Break</th><th align="left">Net</th><th align="left">Driving</th></tr></thead>
+      <tbody id="report-hours-body"></tbody>
+    </table>
+    <div id="report-hours-totals" style="margin-top:8px;font-weight:700"></div>
+  </section>
+
+  <section class="card" id="report-loads" style="display:none">
+    <h3>Loads Report</h3>
+    <div id="report-loads-meta" class="muted"></div>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px">
+      <thead><tr><th align="left">Load Date</th><th align="left">Load Loc</th><th align="left">Temp</th><th align="left">Trailer</th><th align="left">Unload Date</th><th align="left">Unload Loc</th><th align="left">Temp</th></tr></thead>
+      <tbody id="report-loads-body"></tbody>
+    </table>
   </section>
 </main>
 
@@ -220,8 +243,62 @@
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
   const fmt = n => n.toString().padStart(2,'0');
-
   const AUTH_KEY = 'vr_authed';
+  const LS = { PIN:'vr_pin', HOURS:'vr_hours', LOADS:'vr_loads', SUPERVISOR:'vr_supervisor', VIEW:'vr_view_mode' };
+
+  // Alerts PT + modal
+  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  const MSG_ALERTS = {
+    w50: [
+      "⚠️ 50h… já dava para ir de Lisboa a Varsóvia e ainda sobrar gasolina.",
+      "⚠️ 50h — já podes abrir uma loja de horas extra.",
+      "⚠️ 50h — se fosse um jogo, desbloqueavas o boss secreto."
+    ],
+    w52: [
+      "⚠️ 52h — o volante já te chama “pai”.",
+      "⚠️ 52h — a embraiagem já pediu reforma.",
+      "⚠️ 52h — se isto fosse ginásio, estavas Mr. Olympia."
+    ],
+    w54: [
+      "⚠️ 54h — Truckflix and drive versão ilimitada.",
+      "⚠️ 54h — a tua sombra já tem colete refletor."
+    ],
+    w56: [
+      "🛑 56h — agora oficialmente fazes parte dos X-Men: poder mutante = nunca cansar.",
+      "🛑 56h — a tua cama mandou mensagem: “Sdds 😢”"
+    ],
+    b85: [
+      "⚠️ 85h — mais umas horas e ganhas estatuto de estátua no banco."
+    ],
+    b90: [
+      "🛑 90h — a lei manda parar, mas a malta grita: “Só mais uma entrega!”",
+      "🛑 90h — parabéns, és o novo patrocinador oficial da Red Bull.",
+      "🛑 90h — a DGT mandou: “Obrigado pela dedicação… mas chega.”"
+    ],
+    b95: [
+      "⚠️ 54h — a tua sombra já tem colete refletor.",
+      "💀 95h — já nem és camionista, és entidade sobrenatural das estradas.",
+      "💀 95h — Achievement unlocked: Human tachograph.",
+      "💀 95h — parabéns, desbloqueaste o modo Zombie Truck Driver. Agora és lenda urbana: dizem que o camião anda sozinho."
+    ]
+  };
+  function showConfirm(message){
+    return new Promise(res=>{
+      const bd = document.getElementById('app-modal-backdrop');
+      document.getElementById('app-modal-msg').textContent = message;
+      bd.style.display = 'flex';
+      const ok = document.getElementById('app-modal-ok');
+      function close(){ bd.style.display='none'; ok.removeEventListener('click', onok); }
+      function onok(){ close(); res(true); }
+      ok.addEventListener('click', onok);
+    });
+  }
+
+  // Date header
+  const today = new Date();
+  document.getElementById('today').textContent = today.toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+  // Auth helpers
   function isAuthed(){ return sessionStorage.getItem(AUTH_KEY) === '1'; }
   function requireAuth(name){
     if(name==='login') return true;
@@ -229,160 +306,256 @@
     return true;
   }
 
-  const today = new Date();
-  document.getElementById('today').textContent = today.toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-
+  // Screens
   function showScreen(name){
     if(!requireAuth(name)) return;
     $$('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-'+name).classList.add('active');
     if(isAuthed()) document.querySelector('nav.toolbar').classList.remove('hidden');
-    if(name==='hours') renderHoursList();
-    if(name==='home') renderWeekSummary();
-    if(name==='summary') renderSummaryTable();
+    if(name==='hours'){renderHoursList()}
+    if(name==='home'){renderWeekSummary()}
+    if(name==='summary'){renderSummary()}
   }
   $$('.toolbar [data-nav], [data-nav]').forEach(btn=>{
     btn.addEventListener('click',()=>{ const dest=btn.getAttribute('data-nav'); if(requireAuth(dest)) showScreen(dest); });
   });
 
-  const LS = { PIN:'vr_pin', HOURS:'vr_hours', LOADS:'vr_loads' };
+  // Storage defaults
   if(!localStorage.getItem(LS.PIN)) localStorage.setItem(LS.PIN,'1234');
+  if(!localStorage.getItem(LS.VIEW)) localStorage.setItem(LS.VIEW,'net');
   if(!isAuthed()) showScreen('login');
 
   // Login
   document.getElementById('btn-login').addEventListener('click',()=>{
     const p = document.getElementById('pin-input').value.trim();
-    if(p === localStorage.getItem(LS.PIN)){ sessionStorage.setItem(AUTH_KEY,'1'); document.querySelector('nav.toolbar').classList.remove('hidden'); showScreen('home'); }
-    else alert('Wrong PIN 🤚');
-  });
-  document.getElementById('btn-pin-change').addEventListener('click',()=>{
-    const p = document.getElementById('new-pin').value.trim();
-    if(!/^[0-9]{4,6}$/.test(p)){ alert('PIN must have 4–6 digits'); return; }
-    localStorage.setItem(LS.PIN,p); document.getElementById('new-pin').value=''; alert('PIN updated ✅');
+    if(p === localStorage.getItem(LS.PIN)){
+      sessionStorage.setItem(AUTH_KEY,'1');
+      document.querySelector('nav.toolbar').classList.remove('hidden');
+      showScreen('home');
+    } else { alert('Wrong PIN 🤚'); }
   });
 
-  // Hidden admin trigger (10 taps)
-  let taps=0, tmr=null;
-  document.getElementById('logo').addEventListener('click',()=>{ taps++; clearTimeout(tmr); tmr=setTimeout(()=>taps=0,1200); if(taps===10 && isAuthed()) showScreen('admin'); });
+  // Hidden admin (10 taps)
+  let tapCount=0, tapTimer=null;
+  document.getElementById('logo').addEventListener('click',()=>{
+    tapCount++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>{tapCount=0},1200);
+    if(tapCount===10){ localStorage.setItem(LS.SUPERVISOR,'1'); showScreen('admin'); }
+  });
 
-  // Hours
+  // ===== Hours form =====
+  let hoursKind = 'work';
+  document.getElementById('kind-work').addEventListener('click',()=>{ hoursKind='work'; document.getElementById('kind-work').classList.add('active'); document.getElementById('kind-drive').classList.remove('active'); });
+  document.getElementById('kind-drive').addEventListener('click',()=>{ hoursKind='drive'; document.getElementById('kind-drive').classList.add('active'); document.getElementById('kind-work').classList.remove('active'); });
+
   document.getElementById('btn-hours-start').addEventListener('click',()=>{ const d=new Date(); document.getElementById('start-time').value = fmt(d.getHours())+':'+fmt(d.getMinutes()); });
   document.getElementById('btn-hours-end').addEventListener('click',()=>{ const d=new Date(); document.getElementById('end-time').value = fmt(d.getHours())+':'+fmt(d.getMinutes()); });
-  document.getElementById('btn-hours-gps').addEventListener('click',()=>{
+
+  // Reverse geocode to "PT - Ovar"
+  async function reverseGeocode(lat, lon){
+    const key = lat.toFixed(3)+','+lon.toFixed(3);
+    const cache = JSON.parse(localStorage.getItem('vr_geo_cache')||'{}');
+    if(cache[key]) return cache[key];
+    if(!navigator.onLine) return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    try{
+      const r = await fetch(url, {headers:{'Accept':'application/json'}});
+      const j = await r.json();
+      const city = j.address.city || j.address.town || j.address.village || j.address.municipality || j.address.county || 'Local';
+      const cc = (j.address.country_code || '').toUpperCase();
+      const label = `${cc} - ${city}`;
+      cache[key] = label; localStorage.setItem('vr_geo_cache', JSON.stringify(cache));
+      return label;
+    }catch(err){ return `${lat.toFixed(5)}, ${lon.toFixed(5)}`; }
+  }
+
+  let manualLoc=false, holdTimer=null;
+  document.getElementById('btn-hours-gps').addEventListener('click',async ()=>{
+    if(manualLoc){ const hint=document.getElementById('loc-hint'); hint.textContent = '🛰️ GPS desativado (modo manual ON). Long-press 3s para voltar ao automático.'; hint.classList.remove('hidden'); return; }
     if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos)=>{ const {latitude,longitude}=pos.coords; document.getElementById('hours-location').value = latitude.toFixed(5)+', '+longitude.toFixed(5); },
-      (err)=>alert('GPS error: '+err.message), {enableHighAccuracy:true,timeout:8000,maximumAge:0}
-    );
+    navigator.geolocation.getCurrentPosition(async (pos)=>{
+      const {latitude, longitude} = pos.coords;
+      const label = await reverseGeocode(latitude, longitude);
+      document.getElementById('hours-location').value = label;
+    }, (err)=>alert('GPS error: '+err.message), {enableHighAccuracy:true, timeout:12000, maximumAge:0});
   });
 
+  function toggleManualLoc(){
+    manualLoc = !manualLoc;
+    const hint = document.getElementById('loc-hint');
+    if(manualLoc){ hint.textContent = '✏️ Modo manual ON — o GPS tirou férias, agora és tu o chefe do mapa. (long-press 3s para voltar)'; hint.classList.remove('hidden'); }
+    else { hint.textContent = '🛰️ GPS de volta — vou tentar resolver como \'PT - Ovar\' quando houver net.'; setTimeout(()=>hint.classList.add('hidden'), 1800); }
+  }
+  ['mousedown','touchstart'].forEach(ev=>{ document.getElementById('hours-location').addEventListener(ev, ()=>{ holdTimer = setTimeout(toggleManualLoc, 3000); }); });
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>{ document.getElementById('hours-location').addEventListener(ev, ()=>{ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } }); });
+
   function calcNet(){
-    const st=document.getElementById('start-time').value;
-    const et=document.getElementById('end-time').value;
-    const br=parseInt(document.getElementById('break-mins').value||'0',10);
-    document.getElementById('warn').textContent='';
-    if(!st || !et) return {mins:0, pretty:'—'};
+    const st=document.getElementById('start-time').value, et=document.getElementById('end-time').value, br=parseInt(document.getElementById('break-mins').value||'0',10);
+    document.getElementById('warn').textContent=''; if(!st||!et) return {mins:0, pretty:'—', base:0};
     const [sh,sm]=st.split(':').map(Number), [eh,em]=et.split(':').map(Number);
-    let start=sh*60+sm, end=eh*60+em;
-    if(end<start){ end+=24*60; document.getElementById('warn').textContent='End time is past midnight (counted as next day).'; }
-    const net=Math.max(0,end-start-br);
-    return {mins:net, pretty:`${Math.floor(net/60)}h ${fmt(net%60)}m`};
+    let start=sh*60+sm, end=eh*60+em; let base=end-start; if(end<start){ base = (24*60-start)+end; document.getElementById('warn').textContent='End time is past midnight (counted as next day).'; }
+    const net=Math.max(0,base-br); return {mins:net, pretty:`${Math.floor(net/60)}h ${fmt(net%60)}m`, base};
   }
   document.getElementById('btn-calc').addEventListener('click',()=>{ const r=calcNet(); document.getElementById('net-paid').textContent=r.pretty; });
+
   document.getElementById('btn-save-hours').addEventListener('click',()=>{
     const r=calcNet(); if(r.mins<=0){ alert('Nothing to save. Check the times.'); return; }
     const dayKey = document.getElementById('hours-date').value || new Date().toISOString().slice(0,10);
-    const entry = {
-      date: dayKey,
-      start: document.getElementById('start-time').value,
-      end: document.getElementById('end-time').value,
-      break: parseInt(document.getElementById('break-mins').value||'0',10),
-      location: document.getElementById('hours-location').value || '',
-      net: r.mins
-    };
+    const entry = {date:dayKey,start:document.getElementById('start-time').value,end:document.getElementById('end-time').value,break:parseInt(document.getElementById('break-mins').value||'0',10),location:document.getElementById('hours-location').value||'',net:r.mins,kind:hoursKind};
     const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]'); arr.push(entry); localStorage.setItem(LS.HOURS, JSON.stringify(arr));
-    document.getElementById('net-paid').textContent = r.pretty + ' ✓ saved'; renderHoursList(); renderWeekSummary();
+    document.getElementById('net-paid').textContent = r.pretty + ' ✓ saved'; renderHoursList(); renderWeekSummary(); checkTachoAlerts();
   });
 
-  function getISOWeek(d){ d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dayNum = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 4 - dayNum); const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d - yearStart) / 86400000) + 1) / 7); }
+  // Week helpers with split
+  function getISOWeekYear(d){
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+    const week = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    return {week, year: date.getUTCFullYear()};
+  }
+  function addDays(iso, n){ const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+  function splitEntrySegments(e){
+    const [sh,sm]=e.start.split(':').map(Number), [eh,em]=e.end.split(':').map(Number);
+    let start=sh*60+sm, end=eh*60+em; let dur=end-start; let cross=false;
+    if(end<start){ dur = (24*60-start)+end; cross=true; }
+    if(dur<=0) return [];
+    let segs=[];
+    if(cross){
+      const len1 = (24*60 - start), len2 = end;
+      const br = e.break||0; const t = len1+len2; const b1 = Math.round(br*(len1/t)); const b2 = br - b1;
+      segs.push({date:e.date, mins:Math.max(0,len1-b1), kind:e.kind||'work'});
+      segs.push({date:addDays(e.date,1), mins:Math.max(0,len2-b2), kind:e.kind||'work'});
+    } else {
+      const mins = Math.max(0, dur - (e.break||0));
+      segs.push({date:e.date, mins, kind:e.kind||'work'});
+    }
+    return segs;
+  }
+  function sumWeekMinutes(kind){
+    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]');
+    const now = new Date(); const w = getISOWeekYear(now);
+    let total=0;
+    for(const e of arr){
+      for(const s of splitEntrySegments(e)){
+        const wk = getISOWeekYear(new Date(s.date+'T00:00:00'));
+        if (wk.week===w.week && wk.year===w.year){ if(!kind || s.kind===kind) total+=s.mins; }
+      }
+    }
+    return total;
+  }
+  function sumWeekMinutesFor(week, year, kind){
+    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]');
+    let total=0;
+    for(const e of arr){
+      for(const s of splitEntrySegments(e)){
+        const wk = getISOWeekYear(new Date(s.date+'T00:00:00'));
+        if (wk.week===week && wk.year===year){ if(!kind || s.kind===kind) total+=s.mins; }
+      }
+    }
+    return total;
+  }
+  function prevISOWeek(week, year){
+    if (week>1) return {week:week-1, year};
+    const lastDec = new Date(Date.UTC(year-1,11,28)); const w = getISOWeekYear(lastDec);
+    return {week:w.week, year:year-1};
+  }
+  async function checkTachoAlerts(){
+    const now = new Date(); const {week,year} = getISOWeekYear(now);
+    const driveWeek = sumWeekMinutesFor(week,year,'drive')/60;
+    const prev = prevISOWeek(week,year);
+    const biDrive = (sumWeekMinutesFor(week,year,'drive') + sumWeekMinutesFor(prev.week,prev.year,'drive'))/60;
+    if (driveWeek >= 56) return showConfirm(pickRandom(MSG_ALERTS.w56));
+    if (driveWeek >= 54) return showConfirm(pickRandom(MSG_ALERTS.w54));
+    if (driveWeek >= 52) return showConfirm(pickRandom(MSG_ALERTS.w52));
+    if (driveWeek >= 50) return showConfirm(pickRandom(MSG_ALERTS.w50));
+    if (biDrive >= 95) return showConfirm(pickRandom(MSG_ALERTS.b95));
+    if (biDrive >= 90) return showConfirm(pickRandom(MSG_ALERTS.b90));
+    if (biDrive >= 85) return showConfirm(pickRandom(MSG_ALERTS.b85));
+    return false;
+  }
+
+  // Hours list
   function entriesThisWeek(){
     const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]');
-    const now = new Date(); const wk=getISOWeek(now), yr=now.getFullYear();
-    return arr.filter(a=>{ const d=new Date(a.date+'T00:00:00'); return getISOWeek(d)===wk && d.getFullYear()===yr; });
+    const now = new Date(); const w = getISOWeekYear(now);
+    return arr.filter(a=>{ const d=new Date(a.date+'T00:00:00'); const wk=getISOWeekYear(d); return wk.week===w.week && wk.year===w.year; });
   }
   function renderHoursList(){
-    const wrap=document.getElementById('hours-list'); const list=entriesThisWeek(); if(!list.length){ wrap.textContent='—'; return; }
-    wrap.innerHTML = list.map(a=>{ const h=Math.floor(a.net/60), m=a.net%60; return `<div class="list-item"><b>${new Date(a.date).toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short'})}</b> • ${a.start}–${a.end} • Break ${a.break}m • Net ${h}h ${fmt(m)}m` + (a.location?` • <span class='muted'>${a.location}</span>`:'') + `</div>`; }).join('');
+    const list=entriesThisWeek(); const wrap=document.getElementById('hours-list'); if(!list.length){ wrap.textContent='—'; return; }
+    wrap.innerHTML = list.map(a=>{ const h=Math.floor(a.net/60), m=a.net%60; const tag=a.kind==='drive'?'🚚 drive':'🧰 work'; return `<div class="list-item"><b>${new Date(a.date).toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short'})} </b> • ${a.start}–${a.end} • Break ${a.break}m • Net ${h}h ${fmt(m)}m • ${{tag}}` + (a.location?` • <span class='muted'>${a.location}</span>`:'') + `</div>`; }).join('');
   }
+
+  // Home week summary
   function renderWeekSummary(){
-    const list=entriesThisWeek(); const total=list.reduce((s,a)=>s+a.net,0); const h=Math.floor(total/60), m=total%60;
-    document.getElementById('summary-week').innerHTML = list.length ? `Total net: ${h}h ${fmt(m)}m • ${list.length} entr${list.length>1?'ies':'y'}` : 'No entries yet';
+    const total = sumWeekMinutes() ; const h=Math.floor(total/60), m=total%60;
+    document.getElementById('summary-week').innerHTML = total?`Total net: ${h}h ${fmt(m)}m`:'No entries yet';
+    checkTachoAlerts();
   }
-  function renderSummaryTable(){
-    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]'); const byDay={}; for(const a of arr) byDay[a.date]=(byDay[a.date]||0)+a.net;
-    if(!arr.length){ document.getElementById('summary-table').textContent='—'; return; }
-    document.getElementById('summary-table').innerHTML = Object.entries(byDay).sort().map(([d,mins])=>{ const h=Math.floor(mins/60), m=mins%60; return `<div class="list-item"><b>${new Date(d).toLocaleDateString()}</b> • Net ${h}h ${fmt(m)}m</div>`; }).join('');
+
+  // SUMMARY
+  function renderSummary(){
+    const vm = localStorage.getItem(LS.VIEW)||'net';
+    document.querySelectorAll('#summary-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.vm===vm));
+    const now=new Date(); const {week,year}=getISOWeekYear(now); const prev=prevISOWeek(week,year);
+    const netWeek = sumWeekMinutes(); const driveWeek = sumWeekMinutesFor(week,year,'drive'); const driveBi = driveWeek + sumWeekMinutesFor(prev.week,prev.year,'drive');
+    const netH=`${Math.floor(netWeek/60)}h ${fmt(netWeek%60)}m`; const dH=`${Math.floor(driveWeek/60)}h ${fmt(driveWeek%60)}m`; const d2H=`${Math.floor(driveBi/60)}h ${fmt(driveBi%60)}m`;
+    const admin = localStorage.getItem(LS.SUPERVISOR)==='1';
+    const head = document.getElementById('summary-head'); const adminAgg = document.getElementById('admin-agg');
+    if(admin){ adminAgg.classList.remove('hidden'); adminAgg.innerHTML = `Admin view → Net: <b>${netH}</b> • Driving: <b>${dH}</b> • 2 weeks: <b>${d2H}</b>`; } else { adminAgg.classList.add('hidden'); adminAgg.textContent=''; }
+    if(vm==='net') head.innerHTML = `This week (Net): <b>${netH}</b>`; else head.innerHTML = `This week (Driving): <b>${dH}</b> • 2 weeks: <b>${d2H}</b>`;
+    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]'); const byDay={};
+    for(const e of arr){ for(const s of splitEntrySegments(e)){ const wk=getISOWeekYear(new Date(s.date+'T00:00:00')); if(wk.week===week && wk.year===year) byDay[s.date]=(byDay[s.date]||0)+s.mins; } }
+    document.getElementById('summary-table').innerHTML = Object.entries(byDay).sort().map(([d,mins])=>{ const h=Math.floor(mins/60), m=mins%60; return `<div class="list-item"><b>${new Date(d).toLocaleDateString()}</b> • Net ${h}h ${fmt(m)}m</div>`; }).join('') || '—';
   }
+  document.querySelectorAll('#summary-toggle button').forEach(b=>b.addEventListener('click',()=>{ localStorage.setItem(LS.VIEW, b.dataset.vm); renderSummary(); }));
 
   // Loads
   function renderLoads(){
-    const arr = JSON.parse(localStorage.getItem(LS.LOADS)||'[]');
-    document.getElementById('loads-list').innerHTML = arr.length ? arr.map(l=>`<div class="list-item"><b>${l.company}</b> • ${l.city}` + (l.trailer?` • Trailer ${l.trailer}`:'') + `<br>` + `Load: ${l.ldate}` + (isFinite(l.ltemp)?` • ${l.ltemp}°C`:'') + ` | Unload: ${l.udate}` + (l.uloc?` • ${l.uloc}`:'') + (isFinite(l.utemp)?` • ${l.utemp}°C`:'') + `<br><span class="muted">${l.desc||''}</span></div>`).join('') : 'Empty';
+    const arr=JSON.parse(localStorage.getItem(LS.LOADS)||'[]');
+    document.getElementById('loads-list').innerHTML = arr.length ? arr.map(l=>`<div class="list-item"><b>${l.company}</b> • ${l.city}` + (l.trailer?` • Trailer ${l.trailer}`:'') + `<br>` + `Load: ${l.ldate}` + (isFinite(l.ltemp)?` • ${l.ltemp}°C`:'') + ` | Unload: ${l.udate}` + (l.uloc?` • ${l.uloc}`:'') + (isFinite(l.utemp)?` • ${l.utemp}°C`:'') + `<br><span class="muted">${l.desc||''}</span></div>`).join("") : "Empty";
   }
   document.getElementById('btn-add-load').addEventListener('click',()=>{
-    const company=document.getElementById('company').value||'Company';
-    const city=document.getElementById('start-city').value||'Unknown';
-    const ldate=document.getElementById('load-date').value||'2025-08-22';
-    const trailer=document.getElementById('trailer-number').value||'';
-    const ltemp=parseFloat(document.getElementById('load-temp').value||'NaN');
-    const udate=document.getElementById('unload-date').value||'2025-08-22';
-    const uloc=document.getElementById('unload-location').value||'';
-    const utemp=parseFloat(document.getElementById('unload-temp').value||'NaN');
-    const desc=document.getElementById('load-desc').value||'';
-    const arr=JSON.parse(localStorage.getItem(LS.LOADS)||'[]');
-    arr.push({company,city,trailer,ldate,udate,ltemp,uloc,utemp,desc,ts:Date.now()});
-    localStorage.setItem(LS.LOADS, JSON.stringify(arr));
-    renderLoads();
-    // clear form
-    document.getElementById('start-city').value='';
-    document.getElementById('load-date').value='2025-08-22';
-    document.getElementById('trailer-number').value='';
-    document.getElementById('load-temp').value='';
-    document.getElementById('load-desc').value='';
-    document.getElementById('unload-date').value='2025-08-22';
-    document.getElementById('unload-location').value='';
-    document.getElementById('unload-temp').value='';
-    alert('Load saved locally ✅');
+    const company=document.getElementById('company').value||'Company'; const city=document.getElementById('start-city').value||'Unknown'; const trailer=document.getElementById('trailer-number').value||'';
+    const ldate=document.getElementById('load-date').value||2025-08-22; const udate=document.getElementById('unload-date').value||2025-08-22;
+    const ltemp=parseFloat(document.getElementById('load-temp').value||'NaN'); const uloc=document.getElementById('unload-location').value||''; const utemp=parseFloat(document.getElementById('unload-temp').value||'NaN'); const desc=document.getElementById('load-desc').value||'';
+    const arr=JSON.parse(localStorage.getItem(LS.LOADS)||'[]'); arr.push({company,city,trailer,ldate,udate,ltemp,uloc,utemp,desc,ts:Date.now()}); localStorage.setItem(LS.LOADS,JSON.stringify(arr)); renderLoads(); alert('Load saved locally ✅');
+    document.getElementById('start-city').value=''; document.getElementById('trailer-number').value=''; document.getElementById('load-temp').value=''; document.getElementById('load-desc').value=''; document.getElementById('unload-location').value=''; document.getElementById('unload-temp').value=''; document.getElementById('load-date').value='2025-08-22'; document.getElementById('unload-date').value='2025-08-22';
   });
 
-  // Print
-  document.getElementById('btn-export').addEventListener('click',()=>window.print());
-
-  // Admin simple tools
-  function storageStats(){
-    let total=0; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k); total += (k?k.length:0)+(v?v.length:0); }
-    const el=document.getElementById('storage-stats'); if(el) el.textContent='Storage ~ '+Math.round(total/1024)+' KB used';
+  // Reports
+  function openHoursReportAndPrint(){
+    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||'[]'); const tbody = document.getElementById('report-hours-body'); tbody.innerHTML='';
+    for(const e of arr){
+      const driving = (e.kind==='drive') ? (e.net||0) : 0;
+      tbody.innerHTML += `<tr><td>${e.date}</td><td>${e.start}</td><td>${e.end}</td><td>${e.break}m</td><td>${Math.floor((e.net||0)/60)}h ${fmt((e.net||0)%60)}m</td><td>${Math.floor(driving/60)}h ${fmt(driving%60)}m</td></tr>`;
+    }
+    const now=new Date(); const {week,year}=getISOWeekYear(now); const prev=prevISOWeek(week,year);
+    const driveWeek=sumWeekMinutesFor(week,year,'drive'); const driveBi=driveWeek+sumWeekMinutesFor(prev.week,prev.year,'drive');
+    document.getElementById('report-hours-meta').textContent = `Week ${week}/${year}`;
+    document.getElementById('report-hours-totals').textContent = `Driving: ${Math.floor(driveWeek/60)}h ${fmt(driveWeek%60)}m • 2 weeks: ${Math.floor(driveBi/60)}h ${fmt(driveBi%60)}m`;
+    document.getElementById('report-hours').style.display='block'; document.getElementById('report-loads').style.display='none'; window.print(); document.getElementById('report-hours').style.display='none';
   }
-  document.getElementById('btn-export-json')?.addEventListener('click',()=>{
-    const data={ hours: JSON.parse(localStorage.getItem(LS.HOURS)||'[]'), loads: JSON.parse(localStorage.getItem(LS.LOADS)||'[]'), meta: { exported_at: new Date().toISOString(), version: 1 } };
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='driver-export-'+Date.now()+'.json'; a.click(); URL.revokeObjectURL(a.href);
-  });
-  document.getElementById('btn-import-json')?.addEventListener('click',()=>{
-    const f=document.getElementById('import-file').files[0]; if(!f){ alert('Choose a JSON file first'); return; }
-    const r=new FileReader(); r.onload=e=>{ try{ const data=JSON.parse(e.target.result); if(data.hours) localStorage.setItem(LS.HOURS,JSON.stringify(data.hours)); if(data.loads) localStorage.setItem(LS.LOADS,JSON.stringify(data.loads)); alert('Imported ✅'); renderHoursList(); renderLoads(); renderWeekSummary(); renderSummaryTable(); }catch(err){ alert('Invalid JSON: '+err.message); } }; r.readAsText(f);
-  });
-  document.getElementById('btn-clear-data')?.addEventListener('click',()=>{ if(confirm('Clear ALL local data?')){ ['vr_hours','vr_loads'].forEach(k=>localStorage.removeItem(k)); renderHoursList(); renderLoads(); renderWeekSummary(); renderSummaryTable(); alert('Cleared'); } });
-  storageStats();
+  function openLoadsReportAndPrint(){
+    const arr = JSON.parse(localStorage.getItem(LS.LOADS)||'[]'); const tbody = document.getElementById('report-loads-body'); tbody.innerHTML='';
+    for(const l of arr){
+      tbody.innerHTML += `<tr><td>${l.ldate||''}</td><td>${l.city||''}</td><td>${isFinite(l.ltemp)?l.ltemp+'°C':''}</td><td>${l.trailer||''}</td><td>${l.udate||''}</td><td>${l.uloc||''}</td><td>${isFinite(l.utemp)?l.utemp+'°C':''}</td></tr>`;
+    }
+    const now=new Date(); document.getElementById('report-loads-meta').textContent = now.toLocaleString();
+    document.getElementById('report-loads').style.display='block'; document.getElementById('report-hours').style.display='none'; window.print(); document.getElementById('report-loads').style.display='none';
+  }
+  document.getElementById('btn-hours-report').addEventListener('click', openHoursReportAndPrint);
+  document.getElementById('btn-loads-report').addEventListener('click', openLoadsReportAndPrint);
 
-  // Gate banner (warn-only)
+  // Gate banner
   (function gateCheck(){
     const GATE_URL='./gate.json', LS_TS='gate_ok_ts', LS_TTL='gate_ttl_ms', banner=document.getElementById('banner');
     const setB=(cls,msg)=>{ banner.className='banner '+cls; banner.textContent=msg; };
-    const show=()=>{ const ts=+localStorage.getItem(LS_TS)||0; const ttl=+localStorage.getItem(LS_TTL)|| (7*24*3600*1000); const age=Date.now()-ts;
-      if(!ts) setB('warn','First run without validation — offline OK; connect once to validate.');
+    const show=()=>{ const ts=+localStorage.getItem(LS_TS)||0; const ttl=+localStorage.getItem(LS_TTL)||(7*24*3600*1000); const age=Date.now()-ts;
+      if(!ts) setB('warn','First run without validation — app works offline, but connect once to validate.');
       else if(age>ttl) setB('warn','Validation expired — app still works offline. Connect when possible.');
       else if(!navigator.onLine) setB('warn','Offline — app functional, local data.');
-      else { setB('ok','App validated and cached — OK.'); setTimeout(()=>banner.style.display='none',2000); }
+      else { setB('ok','App validated and cached — OK.'); setTimeout(()=>banner.style.display='none', 2000); }
     };
     const save=(h)=>{ localStorage.setItem(LS_TS, String(Date.now())); localStorage.setItem(LS_TTL, String((h||168)*3600*1000)); show(); };
     fetch(GATE_URL,{cache:'no-store'}).then(r=>r.json()).then(d=>{ if(d&&d.enabled) save(d.ttl_hours); else setB('warn','Server disabled — app still works offline.'); }).catch(show);
@@ -390,6 +563,24 @@
   })();
 })();
 </script>
+
+<!-- Modal -->
+<style>
+  #app-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9999}
+  #app-modal{background:#fff;max-width:420px;width:90vw;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:18px;border:1px solid #e5e5e5}
+  #app-modal h3{margin:0 0 8px;font-size:18px}
+  #app-modal p{margin:6px 0 14px;line-height:1.35}
+  #app-modal .btn{width:auto;min-width:120px}
+</style>
+<div id="app-modal-backdrop" role="dialog" aria-modal="true">
+  <div id="app-modal">
+    <h3>Heads up</h3>
+    <p id="app-modal-msg">...</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn btn-blue" id="app-modal-ok">OK</button>
+    </div>
+  </div>
+</div>
 
 <script>
 if ('serviceWorker' in navigator) {

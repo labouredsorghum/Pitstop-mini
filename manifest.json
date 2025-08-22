@@ -1,10 +1,11 @@
 {
   "name": "Driver App",
-  "short_name": "DriverApp",
-  "start_url": ".",
+  "short_name": "Driver",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "description": "Driver app with offline support",
+  "background_color": "#1976D2",
+  "theme_color": "#1976D2",
   "icons": [
     {
       "src": "icon-192.png",

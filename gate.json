@@ -1,1 +1,5 @@
-{"ok": true}
+{
+  "enabled": true,
+  "message": "OK",
+  "ttl_hours": 168
+}
