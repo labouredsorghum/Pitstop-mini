@@ -1,14 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Driver App</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Driver App</title>
+<meta name="theme-color" content="#1976D2" />
+<style>
+  :root{
+    --blue:#1976D2; --blue2:#2196F3; --green:#43A047; --red:#E53935; --orange:#FB8C00;
+    --muted:#6b6b6b; --card:#fff; --border:#e2e2e2; --shadow:0 8px 24px rgba(0,0,0,.08);
+    --r:14px;
+  }
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  html,body{margin:0;background:linear-gradient(#eef2f5,#fafafa);color:#111}
+  .app{max-width:440px;margin:0 auto;padding:14px 14px 100px}
+  header{position:sticky;top:0;z-index:5;background:var(--blue);color:#fff;padding:14px 16px;border-radius:0 0 18px 18px;box-shadow:var(--shadow)}
+  header .title{font-weight:800;letter-spacing:.3px}
+  .logo{display:flex;gap:10px;align-items:center;margin-top:6px;cursor:pointer}
+  .logo .dot{width:28px;height:28px;border-radius:9px;background:#fff}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:12px 0}
+  .row{display:flex;gap:10px;align-items:center}
+  .col{flex:1}
+  label{display:block;margin:6px 2px;font-size:12px;color:var(--muted)}
+  input,select,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;font-size:16px;outline:none}
+  textarea{min-height:90px;resize:vertical}
+  .btn{display:inline-block;width:100%;text-align:center;padding:12px 14px;border-radius:12px;color:#fff;font-weight:700;border:none;cursor:pointer;box-shadow:var(--shadow);user-select:none;transition:transform .05s}
+  .btn:active{transform:translateY(1px)}
+  .btn-blue{background:var(--blue2)} .btn-green{background:var(--green)} .btn-red{background:var(--red)} .btn-grey{background:#777} .btn-orange{background:var(--orange)}
+  .chips{display:flex;gap:10px;overflow-x:auto;padding:6px 2px}
+  .chip{flex:0 0 auto;background:#fff;border:1px solid var(--border);border-radius:999px;padding:10px 14px;box-shadow:var(--shadow);white-space:nowrap}
+  .muted{color:var(--muted)} .hidden{display:none!important}
+  nav.toolbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);box-shadow:0 -10px 24px rgba(0,0,0,.06);padding:10px 12px}
+  nav.toolbar .row{gap:8px;overflow-x:auto}
+  .screen{display:none;animation:fade .15s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .inline-hint{font-size:12px;color:#d9534f;margin-top:6px}
+  @media print{header,nav.toolbar,.no-print{display:none!important}.app{max-width:none}.card{box-shadow:none;border:none}}
+</style>
 </head>
 <body>
-  <h1>Driver App</h1>
-  <p>This week: X hours - X days</p>
-  <p><em>Coming Soon: gráficos, fuel section, maintenance section, sistema multilíngua</em></p>
+<header>
+  <div class="title">Driver App</div>
+  <small id="today"></small>
+  <div id="logo" class="logo"><div class="dot"></div><div><b>Driver Tools</b><br><small class="muted">Offline • Local only</small></div></div>
+</header>
+
+<main class="app">
+  <!-- LOGIN -->
+  <section id="login" class="screen active">
+    <div class="card" style="text-align:center">
+      <h2 style="margin:6px 0 2px">Enter PIN</h2>
+      <div class="muted" style="margin-bottom:8px">Simple lock for privacy (default 1234)</div>
+      <input id="pin" inputmode="numeric" maxlength="6" placeholder="••••" />
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-blue col" id="btn-login">Unlock</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOME -->
+  <section id="home" class="screen">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:6px">This week</div>
+      <div id="week-summary" class="muted">No entries yet</div>
+    </div>
+
+    <div class="card no-print">
+      <div style="font-weight:700;margin-bottom:6px">Quick actions</div>
+      <div class="chips" id="quick">
+        <div class="chip" data-nav="hours">+ Hours</div>
+        <div class="chip" data-nav="load">+ Load</div>
+        <div class="chip" data-nav="summary">View Summary</div>
+        <div class="chip" data-nav="settings">Security</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div style="font-weight:700;margin-bottom:6px">Coming soon 🚀</div>
+      <ul style="margin:0 0 0 18px;padding:0;line-height:1.4">
+        <li>Gráficos</li>
+        <li>Fuel section</li>
+        <li>Maintenance section</li>
+        <li><b>Sistema multilíngua</b></li>
+        <li>PDF (horas & cargas)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- HOURS -->
+  <section id="hours" class="screen">
+    <div class="card">
+      <h3 style="margin:0 0 6px">Work Hours</h3>
+      <label>Entry Date</label>
+      <input id="h-date" type="date">
+      <div class="row" style="margin:8px 0">
+        <button class="btn btn-green col" id="h-start-now">Start</button>
+        <button class="btn btn-red col" id="h-end-now">End</button>
+      </div>
+      <label>Start Time</label>
+      <input id="h-start" type="time">
+      <label>End Time</label>
+      <input id="h-end" type="time">
+      <label>Start Location</label>
+      <input id="h-startloc" placeholder="Country - City">
+      <label>End Location</label>
+      <input id="h-endloc" placeholder="Country - City">
+      <label>Temperature (°C)</label>
+      <input id="h-temp" type="range" min="-25" max="20" value="0" />
+      <div style="margin-top:10px">
+        <button class="btn btn-blue" id="h-save">Save Entry</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary" class="screen">
+    <div class="card">
+      <h3>Summary</h3>
+      <div id="summary-content" class="muted">No data yet</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings" class="screen">
+    <div class="card">
+      <h3>Settings</h3>
+      <p>PIN change, language (coming soon)</p>
+    </div>
+  </section>
+</main>
+
+<nav class="toolbar no-print">
+  <div class="row">
+    <button class="btn btn-grey col" data-nav="home">🏠</button>
+    <button class="btn btn-grey col" data-nav="hours">⏱</button>
+    <button class="btn btn-grey col" data-nav="load">📦</button>
+    <button class="btn btn-grey col" data-nav="summary">📊</button>
+    <button class="btn btn-grey col" data-nav="settings">⚙️</button>
+  </div>
+</nav>
+
+<script>
+// basic navigation
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.querySelectorAll('[data-nav]').forEach(el=>{
+  el.onclick=()=>show(el.dataset.nav);
+});
+document.getElementById("btn-login").onclick=()=>{
+  if(document.getElementById("pin").value==="1234"){show("home");}
+  else alert("Wrong PIN");
+};
+document.getElementById("h-save").onclick=()=>{
+  alert("Entry saved ✅");
+  document.getElementById("h-start").value="";
+  document.getElementById("h-end").value="";
+  document.getElementById("h-startloc").value="";
+  document.getElementById("h-endloc").value="";
+};
+document.getElementById("today").innerText=new Date().toDateString();
+</script>
 </body>
 </html>
