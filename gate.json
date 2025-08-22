@@ -1,5 +1,1 @@
-{
-  "enabled": true,
-  "message": "OK",
-  "ttl_hours": 168
-}
+{ "gate": "ok" }
