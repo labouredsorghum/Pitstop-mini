@@ -1,12 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Driver App</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Driver App</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976D2">
+<style>
+  :root{
+    --blue:#1976D2; --blue-2:#2196F3; --green:#43A047; --red:#E53935; --orange:#FB8C00;
+    --grey-1:#f5f5f5; --grey-2:#eeeeee; --text:#111; --muted:#6b6b6b; --card:#ffffff;
+    --border:#d0d0d0; --shadow:0 6px 20px rgba(0,0,0,.08); --radius:14px;
+  }
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eceff1,#fafafa);color:var(--text)}
+  .app{max-width:420px;margin:0 auto;padding:16px 16px 80px}
+  header{position:sticky;top:0;z-index:5;background:var(--blue);color:#fff;border-bottom:1px solid rgba(255,255,255,.2);padding:14px 16px;border-radius:0 0 18px 18px;box-shadow:var(--shadow)}
+  header .title{font-weight:700;letter-spacing:.3px}
+  .logo{display:flex;align-items:center;gap:10px;margin:8px 0 0;}
+  .logo .dot{width:28px;height:28px;border-radius:8px;background:#fff}
+  .screen{display:none;animation:fade .2s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 0}
+  .row{display:flex;gap:10px}
+  .col{flex:1}
+  label{display:block;font-size:12px;color:var(--muted);margin:6px 2px}
+  input,select,textarea{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font-size:16px;outline:none}
+  textarea{min-height:90px;resize:vertical}
+  .btn{display:inline-block;width:100%;text-align:center;padding:12px 14px;border-radius:12px;color:#fff;font-weight:700;border:none;cursor:pointer;box-shadow:var(--shadow);transition:transform .05s ease;user-select:none}
+  .btn:active{transform:translateY(1px)}
+  .btn-blue{background:var(--blue-2)} .btn-grey{background:#757575} .btn-green{background:#43A047} .btn-red{background:#E53935} .btn-orange{background:#FB8C00}
+  .stack{display:grid;gap:10px}
+  .muted{color:var(--muted)} .center{text-align:center}
+  .pillar{height:1px;background:#e5e5e5;margin:12px 0}
+  .toolbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 14px;box-shadow:0 -8px 24px rgba(0,0,0,.06)}
+  .toolbar .row{gap:12px}
+  .hidden{display:none !important}
+  .banner{position:sticky;top:0;margin:-8px -8px 10px;padding:8px 12px;border-radius:10px;font-size:13px;display:none}
+  .banner.warn{background:#fff3cd;border:1px solid #ffeeba;color:#856404;display:block}
+  .banner.ok{background:#e6ffec;border:1px solid #b7f5c0;color:#096a2e;display:block}
+  .banner.err{background:#fdecea;border:1px solid #f5c2c7;color:#842029;display:block}
+  @media print{header,.toolbar{display:none !important}.app{max-width:none}.card{box-shadow:none}}
+</style>
 </head>
 <body>
-  <h1>Driver App</h1>
-  <p>Versão com login obrigatório, admin escondido (10 taps no logo), horas com GPS e cargas com trailer/temp/unload.</p>
+<header>
+  <div class="title">Driver App</div>
+  <small id="today"></small>
+  <div id="logo" class="logo">
+    <div class="dot"></div>
+    <div><div style="font-weight:700">Driver Tools</div><small class="muted">Offline • Local only</small></div>
+  </div>
+</header>
+
+<main class="app">
+  <div id="banner" class="banner" aria-live="polite"></div>
+
+  <!-- LOGIN -->
+  <section class="screen active" id="screen-login">
+    <div class="card center">
+      <h2 style="margin:6px 0 2px">Enter PIN</h2>
+      <div class="muted" style="margin-bottom:12px">Simple lock for privacy</div>
+      <div class="stack">
+        <input id="pin-input" inputmode="numeric" maxlength="6" placeholder="•••• (default 1234)">
+        <button class="btn btn-blue" id="btn-login">Unlock</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen" id="screen-home">
+    <div class="card">
+      <div class="stack">
+        <button class="btn btn-blue" data-nav="hours">Log Hours</button>
+        <button class="btn btn-blue" data-nav="load">New Load</button>
+        <button class="btn btn-orange" id="btn-export">Generate PDF</button>
+        <button class="btn btn-grey" data-nav="settings">Settings</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:6px">This week</div>
+      <div id="summary-week" class="muted">No entries yet</div>
+    </div>
+  </section>
+
+  <!-- HOURS -->
+  <section class="screen" id="screen-hours">
+    <div class="card">
+      <h3 style="margin:0 0 6px">Work Hours</h3>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn btn-green col" id="btn-hours-start">Start Shift</button>
+        <button class="btn btn-blue col" id="btn-hours-gps">GPS Location</button>
+      </div>
+      <label>Location</label>
+      <div class="row"><input id="hours-location" class="col" placeholder="Set via GPS or enter manually"><div style="width:0"></div></div>
+      <div class="row">
+        <div class="col">
+          <label>Start Time</label>
+          <input id="start-time" type="time" value="08:00">
+        </div>
+        <div class="col">
+          <label>End Time</label>
+          <input id="end-time" type="time" value="17:30">
+        </div>
+      </div>
+      <label>Break (minutes)</label>
+      <input id="break-mins" type="number" min="0" value="30">
+      <div class="pillar"></div>
+      <div><b>Net Paid:</b> <span id="net-paid">—</span></div>
+      <div class="muted" id="warn"></div>
+      <div class="stack" style="margin-top:10px">
+        <button class="btn btn-blue" id="btn-calc">Calculate</button>
+        <button class="btn btn-green" id="btn-save-hours">Save Entry</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin:0 0 8px">Saved Entries (Week)</h4>
+      <div id="hours-list">—</div>
+    </div>
+  </section>
+
+  <!-- LOADS -->
+  <section class="screen" id="screen-load">
+    <div class="card">
+      <h3 style="margin:0 0 6px">New Load</h3>
+      <label>Company (Header)</label>
+      <input id="company" placeholder="Company">
+      <label>Start City</label>
+      <div class="row">
+        <input id="start-city" class="col" placeholder="Tap button to auto-fill via GPS (one-shot)">
+        <button class="btn btn-blue" id="btn-gps" style="width:140px">Use GPS</button>
+      </div>
+      <label>Trailer Number</label>
+      <input id="trailer-number" placeholder="e.g., TR-12345">
+      <label>Load Temperature (°C)</label>
+      <input id="load-temp" type="number" step="0.1" placeholder="e.g., -18">
+      <label>Load Description</label>
+      <textarea id="load-desc" placeholder="e.g., Frozen goods, pallets…"></textarea>
+      <label style="margin-top:8px">Unload Location</label>
+      <input id="unload-location" placeholder="City / Address">
+      <label>Unload Temperature (°C)</label>
+      <input id="unload-temp" type="number" step="0.1" placeholder="e.g., -18">
+      <div class="stack">
+        <button class="btn btn-green" id="btn-add-load">Add Load</button>
+      </div>
+    </div>
+    <div class="card">
+      <h4 style="margin:0 0 8px">Loads (local)</h4>
+      <div id="loads-list" class="muted">Empty</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="screen-settings">
+    <div class="card">
+      <h3 style="margin:0 0 6px">Privacy</h3>
+      <div class="muted">GPS is one-tap only (no tracking). Data stored only on this device.</div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 6px">Security</h3>
+      <div class="row">
+        <input id="new-pin" placeholder="New PIN (4–6 digits)" class="col">
+        <button class="btn btn-blue" id="btn-pin-change" style="width:150px">Change PIN</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="screen" id="screen-summary">
+    <div class="card">
+      <h3 style="margin:0 0 6px">Hours Summary (Week)</h3>
+      <div id="summary-table">—</div>
+    </div>
+  </section>
+
+  <!-- ADMIN (hidden entry only; no hint in UI) -->
+  <section class="screen" id="screen-admin">
+    <div class="card">
+      <h3 style="margin:0 0 6px">Admin</h3>
+      <div class="stack">
+        <button class="btn btn-blue" id="btn-export-json">Export data (JSON)</button>
+        <input type="file" id="import-file" accept="application/json">
+        <button class="btn btn-green" id="btn-import-json">Import data</button>
+        <button class="btn btn-orange" id="btn-clear-data">Clear all local data</button>
+        <button class="btn btn-grey" id="btn-toggle-supervisor">Toggle supervisor mode</button>
+        <div class="pillar"></div>
+        <label>Default Company</label>
+        <input id="admin-company" placeholder="Company">
+        <button class="btn btn-blue" id="btn-save-company">Save default company</button>
+        <div class="pillar"></div>
+        <div id="storage-stats" class="muted">Storage: —</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="toolbar hidden">
+  <div class="row">
+    <button class="btn btn-grey col" data-nav="home">Home</button>
+    <button class="btn btn-grey col" data-nav="hours">Hours</button>
+    <button class="btn btn-grey col" data-nav="load">Load</button>
+    <button class="btn btn-grey col" data-nav="summary">Summary</button>
+    <button class="btn btn-grey col" data-nav="settings">Settings</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const fmt = n => n.toString().padStart(2,'0');
+
+  // Auth guard
+  const AUTH_KEY = 'vr_authed';
+  function isAuthed(){ return sessionStorage.getItem(AUTH_KEY) === '1'; }
+  function requireAuth(name){
+    if(name==='login') return true;
+    if(!isAuthed()){ showScreen('login'); return false; }
+    return true;
+  }
+
+  // Date
+  const today = new Date();
+  $("#today").textContent = today.toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+  // Show screen
+  function showScreen(name){
+    if(!requireAuth(name)) return;
+    $$(".screen").forEach(s=>s.classList.remove("active"));
+    $("#screen-"+name).classList.add("active");
+    if(isAuthed()) document.querySelector('nav.toolbar').classList.remove('hidden');
+    if(name==='hours'){renderHoursList()}
+    if(name==='home'){renderWeekSummary()}
+    if(name==='summary'){renderSummaryTable()}
+  }
+  $$(".toolbar [data-nav], [data-nav]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const dest = btn.getAttribute("data-nav");
+      if(requireAuth(dest)) showScreen(dest);
+    });
+  });
+
+  // Storage keys
+  const LS = { PIN:"vr_pin", HOURS:"vr_hours", LOADS:"vr_loads", SUPERVISOR:"vr_supervisor" };
+  if(!localStorage.getItem(LS.PIN)) localStorage.setItem(LS.PIN,"1234");
+  if(!isAuthed()) showScreen("login");
+
+  // Login
+  $("#btn-login").addEventListener("click",()=>{
+    const p = $("#pin-input").value.trim();
+    if(p === localStorage.getItem(LS.PIN)){
+      sessionStorage.setItem(AUTH_KEY,'1');
+      document.querySelector('nav.toolbar').classList.remove('hidden');
+      showScreen('home');
+    } else {
+      alert("Wrong PIN 🤚");
+    }
+  });
+  $("#btn-pin-change").addEventListener("click",()=>{
+    let p = $("#new-pin").value.trim();
+    if(!/^[0-9]{4,6}$/.test(p)){ alert("PIN must have 4–6 digits"); return; }
+    localStorage.setItem(LS.PIN,p); $("#new-pin").value=""; alert("PIN updated ✅");
+  });
+
+  // Hidden admin (10 taps). Supervisor (5 taps) opcional.
+  let tapCount=0, tapTimer=null;
+  $("#logo").addEventListener("click",()=>{
+    tapCount++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>{tapCount=0},1200);
+    if(tapCount===5){ localStorage.setItem(LS.SUPERVISOR,'1'); }
+    if(tapCount===10){ if(isAuthed()) showScreen('admin'); }
+  });
+
+  // Hours
+  $("#btn-hours-start").addEventListener("click",()=>{
+    const d = new Date();
+    $("#start-time").value = fmt(d.getHours())+":"+fmt(d.getMinutes());
+  });
+  $("#btn-hours-gps").addEventListener("click",()=>{
+    if(!navigator.geolocation){ alert("Geolocation not supported"); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{ const {latitude, longitude} = pos.coords; $("#hours-location").value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`; },
+      (err)=>alert("GPS error: "+err.message),
+      {enableHighAccuracy:true, timeout:8000, maximumAge:0}
+    );
+  });
+  function calcNet(){
+    const st = $("#start-time").value, et = $("#end-time").value, br = parseInt($("#break-mins").value||"0",10);
+    $("#warn").textContent=""; if(!st || !et) return {mins:0, pretty:"—"};
+    const [sh,sm] = st.split(":").map(Number); const [eh,em] = et.split(":").map(Number);
+    let start = sh*60+sm, end = eh*60+em; if(end<start){ end += 24*60; $("#warn").textContent="End time is past midnight (counted as next day)."; }
+    const net = Math.max(0,end-start-br); return {mins:net, pretty:`${Math.floor(net/60)}h ${fmt(net%60)}m`};
+  }
+  $("#btn-calc").addEventListener("click",()=>{ const r = calcNet(); $("#net-paid").textContent = r.pretty; });
+  $("#btn-save-hours").addEventListener("click",()=>{
+    const r = calcNet(); if(r.mins<=0){ alert("Nothing to save. Check the times."); return; }
+    const dayKey = new Date().toISOString().slice(0,10);
+    const entry = {date:dayKey,start:$("#start-time").value,end:$("#end-time").value,break:parseInt($("#break-mins").value||"0",10),location:$("#hours-location").value||"",net:r.mins};
+    const arr = JSON.parse(localStorage.getItem(LS.HOURS)||"[]"); arr.push(entry); localStorage.setItem(LS.HOURS, JSON.stringify(arr));
+    $("#net-paid").textContent = r.pretty + " ✓ saved"; renderHoursList(); renderWeekSummary();
+  });
+  function getISOWeek(d){ d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dayNum = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 4 - dayNum); const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d - yearStart) / 86400000) + 1) / 7); }
+  function entriesThisWeek(){ const arr=JSON.parse(localStorage.getItem(LS.HOURS)||"[]"); const now=new Date(); const wk=getISOWeek(now), yr=now.getFullYear(); return arr.filter(a=>{ const d=new Date(a.date+'T00:00:00'); return getISOWeek(d)===wk && d.getFullYear()===yr; }); }
+  function renderHoursList(){ const list=entriesThisWeek(); const wrap=$("#hours-list"); if(!list.length){ wrap.textContent='—'; return; }
+    wrap.innerHTML = list.map(a=>{ const h=Math.floor(a.net/60), m=a.net%60; return `<div class="list-item"><b>${new Date(a.date).toLocaleDateString(undefined,{weekday:'short',day:'2-digit',month:'short'})}</b> • ${a.start}–${a.end} • Break ${a.break}m • Net ${h}h ${fmt(m)}m` + (a.location?` • <span class='muted'>${a.location}</span>`:'') + `</div>`; }).join(''); }
+  function renderWeekSummary(){ const list=entriesThisWeek(); const total=list.reduce((s,a)=>s+a.net,0); const h=Math.floor(total/60), m=total%60; $("#summary-week").innerHTML = list.length?`<span class="ok">Total net: ${h}h ${fmt(m)}m</span> • ${list.length} entr${list.length>1?'ies':'y'}`:'No entries yet'; }
+  function renderSummaryTable(){ const arr=JSON.parse(localStorage.getItem(LS.HOURS)||"[]"); const byDay={}; for(const a of arr){ byDay[a.date]=(byDay[a.date]||0)+a.net; } if(!arr.length){ $("#summary-table").textContent="—"; return; } $("#summary-table").innerHTML = Object.entries(byDay).sort().map(([d,mins])=>{ const h=Math.floor(mins/60), m=mins%60; return `<div class="list-item"><b>${new Date(d).toLocaleDateString()}</b> • Net ${h}h ${fmt(m)}m</div>`; }).join(''); }
+
+  // Loads
+  function renderLoads(){ const arr=JSON.parse(localStorage.getItem(LS.LOADS)||"[]");
+    $("#loads-list").innerHTML = arr.length ? arr.map(l=>`<div class="list-item"><b>${l.company}</b> • ${l.city}` + (l.trailer?` • Trailer ${l.trailer}`:'') + `<br>` + (isFinite(l.ltemp)?`Load temp: ${l.ltemp}°C • `:'') + (l.uloc?`Unload: ${l.uloc}`:'') + (isFinite(l.utemp)?` • ${l.utemp}°C`:'') + `<br><span class="muted">${l.desc||''}</span></div>`).join("") : "Empty"; }
+  $("#btn-add-load").addEventListener("click",()=>{
+    const company=$("#company").value||"Company"; const city=$("#start-city").value||"Unknown"; const trailer=$("#trailer-number").value||"";
+    const ltemp=parseFloat($("#load-temp").value||"NaN"); const uloc=$("#unload-location").value||""; const utemp=parseFloat($("#unload-temp").value||"NaN"); const desc=$("#load-desc").value||"";
+    const arr=JSON.parse(localStorage.getItem(LS.LOADS)||"[]"); arr.push({company,city,trailer,ltemp,uloc,utemp,desc,ts:Date.now()}); localStorage.setItem(LS.LOADS,JSON.stringify(arr)); renderLoads(); alert("Load saved locally ✅");
+  });
+  $("#btn-gps").addEventListener("click",()=>{
+    if(!navigator.geolocation){ alert("Geolocation not supported"); return; }
+    navigator.geolocation.getCurrentPosition((pos)=>{ const {latitude,longitude} = pos.coords; $("#start-city").value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`; }, (err)=>alert("GPS error: "+err.message), {enableHighAccuracy:true,timeout:8000,maximumAge:0});
+  });
+
+  // Export as PDF via print
+  $("#btn-export").addEventListener("click",()=>{ window.print(); });
+
+  // Admin tools (no UI hint; only via 10 taps)
+  function storageStats(){ let total = 0; for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); const v = localStorage.getItem(k); total += (k?k.length:0) + (v?v.length:0); } $("#storage-stats").textContent = `Storage ~ ${Math.round(total/1024)} KB used`; }
+  $("#btn-export-json")?.addEventListener("click", ()=>{
+    const data = { hours: JSON.parse(localStorage.getItem(LS.HOURS)||"[]"), loads: JSON.parse(localStorage.getItem(LS.LOADS)||"[]"), pin: localStorage.getItem(LS.PIN) ? "****" : null, supervisor: localStorage.getItem(LS.SUPERVISOR)==='1', meta: { exported_at: new Date().toISOString(), version: 1 } };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`driver-export-${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $("#btn-import-json")?.addEventListener("click", ()=>{
+    const f=$("#import-file").files[0]; if(!f){ alert("Choose a JSON file first"); return; }
+    const reader=new FileReader(); reader.onload=(e)=>{ try{ const data=JSON.parse(e.target.result);
+      if(data.hours) localStorage.setItem(LS.HOURS, JSON.stringify(data.hours));
+      if(data.loads) localStorage.setItem(LS.LOADS, JSON.stringify(data.loads));
+      alert("Imported OK ✅"); renderHoursList(); renderLoads(); renderWeekSummary(); renderSummaryTable();
+    }catch(err){ alert("Invalid JSON: "+err.message); } }; reader.readAsText(f);
+  });
+  $("#btn-clear-data")?.addEventListener("click", ()=>{
+    if(confirm("Clear ALL local data? This cannot be undone.")){ ['vr_hours','vr_loads'].forEach(k=>localStorage.removeItem(k)); alert("Cleared"); renderHoursList(); renderLoads(); renderWeekSummary(); renderSummaryTable(); }
+  });
+  $("#btn-toggle-supervisor")?.addEventListener("click", ()=>{
+    const cur = localStorage.getItem('vr_supervisor')==='1'; localStorage.setItem('vr_supervisor', cur ? '0':'1');
+  });
+  const COMPANY_KEY='vr_company_default';
+  $("#btn-save-company")?.addEventListener("click", ()=>{ const c=$("#admin-company").value.trim(); localStorage.setItem(COMPANY_KEY, c); alert("Saved"); });
+  const companyInput=$("#company"); if(companyInput){ const cv=localStorage.getItem(COMPANY_KEY); if(cv) companyInput.value=cv; }
+  storageStats();
+
+  // Warn-only gate banner
+  (function gateCheck(){
+    const GATE_URL = './gate.json'; const LS_TS = 'gate_ok_ts'; const LS_TTL = 'gate_ttl_ms'; const banner = document.getElementById('banner');
+    const setBanner = (cls, msg)=>{ banner.className='banner '+cls; banner.textContent=msg; };
+    function showStatus(){ const ts = Number(localStorage.getItem(LS_TS)||0); const ttl = Number(localStorage.getItem(LS_TTL)|| (7*24*3600*1000)); const age = Date.now() - ts;
+      if (!ts){ setBanner('warn','First run without validation — app works offline, but connect once to validate.'); return; }
+      if (age > ttl){ setBanner('warn','Validation expired — app still works offline. Connect when possível.'); }
+      else if (!navigator.onLine){ setBanner('warn','Offline — app funcional, dados locais.'); }
+      else { setBanner('ok','App validada e em cache — OK.'); setTimeout(()=>{banner.style.display='none';}, 2000); } }
+    function saveOK(ttlHours){ localStorage.setItem(LS_TS, String(Date.now())); localStorage.setItem(LS_TTL, String((ttlHours||168)*3600*1000)); showStatus(); }
+    fetch(GATE_URL, {cache:'no-store'}).then(r=>r.json()).then(data=>{ if (data && data.enabled){ saveOK(data.ttl_hours); } else { setBanner('warn','Server disabled — app still works offline.'); } }).catch(()=>{ showStatus(); });
+    window.addEventListener('online', showStatus); window.addEventListener('offline', showStatus);
+  })();
+})();</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  });
+}
+</script>
 </body>
 </html>
