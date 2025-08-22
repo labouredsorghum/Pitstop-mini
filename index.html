@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Driver App</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./style.css?v=layout2">
-  <meta name="theme-color" content="#1976D2">
-  <script defer src="./script.js?v=11"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Driver App</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./style.css?v=12">
+<meta name="theme-color" content="#1976D2">
+<script defer src="./script.js?v=12"></script>
 </head>
 <body>
 <header class="app-bar">
@@ -19,13 +19,22 @@
 </header>
 
 <main class="app">
+  <!-- LOGIN -->
+  <section id="screen-login" class="screen active">
+    <div class="card center">
+      <h2>Enter PIN</h2>
+      <div class="muted">Default 1234</div>
+      <input id="pin-input" inputmode="numeric" maxlength="6" placeholder="••••">
+      <button class="btn btn-blue" id="btn-login">Unlock</button>
+    </div>
+  </section>
+
   <!-- HOME -->
-  <section id="screen-home" class="screen active">
+  <section id="screen-home" class="screen">
     <div class="card">
       <div class="card-title">This week</div>
       <div id="summary-week" class="muted">No entries yet</div>
     </div>
-
     <div class="card no-print">
       <div class="card-title">Quick actions</div>
       <div class="chips">
@@ -35,7 +44,6 @@
         <button class="chip" data-nav="settings">Security</button>
       </div>
     </div>
-
     <div class="card no-print">
       <div class="card-title">Coming soon 🚀</div>
       <ul class="list bullets">
@@ -107,6 +115,61 @@
       <div id="hours-list" class="muted">—</div>
     </div>
   </section>
+
+  <!-- LOADS -->
+  <section id="screen-load" class="screen">
+    <div class="card">
+      <h3 class="card-title">New Load</h3>
+      <label>Company</label><input id="company" placeholder="Header">
+      <label>Start City</label><input id="start-city" placeholder="City / Address">
+      <label>Load Date</label><input id="load-date" type="date">
+      <label>Trailer Number</label><input id="trailer-number" placeholder="TR-12345">
+
+      <label>Load Temperature (°C)</label>
+      <input id="load-temp" type="range" min="-25" max="20" step="1" value="0" oninput="document.getElementById('ltv').textContent=this.value+'°C'">
+      <div id="ltv" class="muted">0°C</div>
+
+      <label>Load Description</label><textarea id="load-desc" placeholder="Frozen goods, pallets…"></textarea>
+
+      <label>Unload Date</label><input id="unload-date" type="date">
+      <label>Unload Location</label><input id="unload-location" placeholder="City / Address">
+
+      <label>Unload Temperature (°C)</label>
+      <input id="unload-temp" type="range" min="-25" max="20" step="1" value="0" oninput="document.getElementById('utv').textContent=this.value+'°C'">
+      <div id="utv" class="muted">0°C</div>
+
+      <button class="btn btn-green mt" id="btn-add-load">Add Load</button>
+    </div>
+
+    <div class="card">
+      <h4 class="card-title">Loads (local)</h4>
+      <div id="loads-list" class="muted">Empty</div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="screen-summary" class="screen">
+    <div class="card">
+      <h3 class="card-title">Summary</h3>
+      <div class="row no-print" id="summary-toggle">
+        <button data-vm="net" class="btn btn-grey col active">Net</button>
+        <button data-vm="drive" class="btn btn-grey col">Driving</button>
+      </div>
+      <div id="summary-head" style="margin-top:8px">—</div>
+      <div id="summary-table" style="margin-top:8px">—</div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="screen-settings" class="screen">
+    <div class="card">
+      <h3 class="card-title">Security</h3>
+      <div class="row">
+        <input id="new-pin" placeholder="New PIN (4–6 digits)" class="col">
+        <button class="btn btn-blue" id="btn-pin-change" style="width:150px">Change PIN</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <nav class="toolbar">
@@ -118,5 +181,24 @@
     <button class="btn btn-grey col" data-nav="settings">⚙️</button>
   </div>
 </nav>
+
+<!-- Modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Aviso</h3>
+    <p id="modal-msg">...</p>
+    <div class="row" style="justify-content:flex-end">
+      <button id="modal-ok" class="btn btn-blue" style="width:auto;min-width:120px">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js?v=12');
+    });
+  }
+</script>
 </body>
 </html>
