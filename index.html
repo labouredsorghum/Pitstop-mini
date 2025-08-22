@@ -1,53 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Driver App</title>
-  <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css?v=layout2">
+  <meta name="theme-color" content="#1976D2">
+  <script defer src="./script.js?v=11"></script>
 </head>
 <body>
-  <h2>Driver App</h2>
-  <section id="login">
-    <h3>Enter PIN</h3>
-    <input type="password" id="pinInput" placeholder="Default 1234">
-    <button onclick="unlockApp()">Unlock</button>
+<header class="app-bar">
+  <div class="title">Driver App</div>
+  <small id="today"></small>
+  <div id="logo" class="logo"><div class="dot"></div>
+    <div><b>Driver Tools</b><br><small class="muted">Offline • Local only</small></div>
+  </div>
+</header>
+
+<main class="app">
+  <!-- HOME -->
+  <section id="screen-home" class="screen active">
+    <div class="card">
+      <div class="card-title">This week</div>
+      <div id="summary-week" class="muted">No entries yet</div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-title">Quick actions</div>
+      <div class="chips">
+        <button class="chip" data-nav="hours">+ Hours</button>
+        <button class="chip" data-nav="load">+ Load</button>
+        <button class="chip" data-nav="summary">Summary</button>
+        <button class="chip" data-nav="settings">Security</button>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="card-title">Coming soon 🚀</div>
+      <ul class="list bullets">
+        <li>📊 Gráficos</li>
+        <li>⛽ Fuel section</li>
+        <li>🛠️ Maintenance section</li>
+        <li><b>🌍 Sistema multilíngua</b></li>
+        <li>📄 PDF (horas & cargas)</li>
+      </ul>
+    </div>
   </section>
 
-  <section id="mainApp" style="display:none;">
-    <h3>This week</h3>
-    <div id="weeklySummary">No entries yet</div>
-    <h3>Quick actions</h3>
-    <button onclick="showHoursForm()">+ Hours</button>
-    <button onclick="showLoadForm()">+ Load</button>
-    <button onclick="showSummary()">Summary</button>
+  <!-- HOURS -->
+  <section id="screen-hours" class="screen">
+    <div class="card">
+      <h3 class="card-title">Work Hours</h3>
+      <label>Entry Date</label>
+      <input id="hours-date" type="date">
 
-    <h3>Coming soon 🚀</h3>
-    <ul>
-      <li>📊 Gráficos</li>
-      <li>⛽ Fuel section</li>
-      <li>🛠️ Maintenance section</li>
-      <li><b>Sistema multilingua</b></li>
-      <li>📄 PDF (horas & cargas)</li>
-    </ul>
+      <div class="row mt">
+        <button class="btn btn-green col" id="btn-start-now">Start</button>
+        <button class="btn btn-red col" id="btn-end-now">End</button>
+      </div>
 
-    <h3>Work Hours</h3>
-    <label>Entry Date <input type="date" id="entryDate"></label><br>
-    <label>Start Time <input type="time" id="startTime"></label><br>
-    <label>End Time <input type="time" id="endTime"></label><br>
+      <div class="row mt">
+        <div class="col">
+          <label>Start Time</label><input id="start-time" type="time">
+        </div>
+        <div class="col">
+          <label>End Time</label><input id="end-time" type="time">
+        </div>
+      </div>
 
-    <label>Start Location <input type="text" id="startLoc" placeholder="Country - City"></label>
-    <button onclick="getLocation('startLoc')">GPS Start</button><br>
+      <div class="row mt">
+        <div class="col">
+          <label>Start Location</label>
+          <input id="loc-start" placeholder="Country - City (auto) • long‑press 3s p/ manual">
+          <div id="hint-start" class="inline-hint hidden"></div>
+          <button class="btn btn-blue mt" id="btn-gps-start">GPS Start</button>
+        </div>
+        <div class="col">
+          <label>End Location</label>
+          <input id="loc-end" placeholder="Country - City (auto) • long‑press 3s p/ manual">
+          <div id="hint-end" class="inline-hint hidden"></div>
+          <button class="btn btn-blue mt" id="btn-gps-end">GPS End</button>
+        </div>
+      </div>
 
-    <label>End Location <input type="text" id="endLoc" placeholder="Country - City"></label>
-    <button onclick="getLocation('endLoc')">GPS End</button><br>
+      <label class="mt">Break (minutes)</label>
+      <input id="break-mins" type="number" min="0" value="0">
 
-    <label>Break (minutes) <input type="number" id="breakMins" value="0"></label><br>
-    <button onclick="saveEntry()">Save Entry</button>
+      <label class="mt">Type</label>
+      <div class="row">
+        <button id="kind-work" class="btn btn-grey col active">Work</button>
+        <button id="kind-drive" class="btn btn-grey col">Driving</button>
+      </div>
 
-    <h3>Saved (this week)</h3>
-    <ul id="entriesList"></ul>
+      <div class="sum">Net: <b id="net-paid">—</b></div>
+      <div class="muted" id="warn"></div>
+
+      <div class="row mt">
+        <button class="btn btn-blue col" id="btn-calc">Calculate</button>
+        <button class="btn btn-green col" id="btn-save-hours">Save Entry</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 class="card-title">Saved (this week)</h4>
+      <div id="hours-list" class="muted">—</div>
+    </div>
   </section>
+</main>
+
+<nav class="toolbar">
+  <div class="row">
+    <button class="btn btn-grey col" data-nav="home">🏠</button>
+    <button class="btn btn-grey col" data-nav="hours">⏱️</button>
+    <button class="btn btn-grey col" data-nav="load">📦</button>
+    <button class="btn btn-grey col" data-nav="summary">📊</button>
+    <button class="btn btn-grey col" data-nav="settings">⚙️</button>
+  </div>
+</nav>
 </body>
 </html>
